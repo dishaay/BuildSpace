@@ -1,4 +1,4 @@
-BuildSpace 🚀
+BuildSpace 
 
 BuildSpace is a full-stack developer collaboration platform designed to help developers discover ideas, showcase their projects, find teammates, and grow together as a community.
 

@@ -18,8 +18,6 @@ connectDB(); //this will connect my database.
 
 console.log("Before app.listen");
 
-app.listen(PORT, () => {
-  console.log(`Server is listening on port ${PORT}`);
+app.listen(8081, '0.0.0.0', () => {
+  console.log("Server is listening on port 8081");
 });
-
-console.log("After app.listen");

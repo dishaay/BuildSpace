@@ -1,12 +1,15 @@
 require("dotenv").config();
 const express= require('express')
 const app=express()
+app.use(express.json());
+
 const PORT = process.env.PORT || 3000;
 const connectDB= require("./config/db");
 const { connect } = require("mongoose");
-app.use(express.json());
 const authRoutes = require("./routes/authRoutes");
+const userRoutes = require("./routes/userRoutes");
 app.use("/api/auth", authRoutes);
+app.use("/api/users", userRoutes);
 
 app.get("/", (req, res) => {
   console.log("GET / request received");

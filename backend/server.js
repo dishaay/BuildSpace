@@ -8,9 +8,10 @@ const connectDB= require("./config/db");
 const { connect } = require("mongoose");
 const authRoutes = require("./routes/authRoutes");
 const userRoutes = require("./routes/userRoutes");
+const projectRoutes = require("./routes/projectRoutes");
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
-
+app.use("/api/projects", projectRoutes);
 app.get("/", (req, res) => {
   console.log("GET / request received");
   res.send("Backend is working!");

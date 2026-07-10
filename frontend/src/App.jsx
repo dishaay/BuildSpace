@@ -20,6 +20,7 @@ export default function App() {
         <Route path="/communities" element={<CommunitiesPage />} />
         <Route path="/hackathons" element={<HackathonFinderPage />} />
         <Route path="/projects" element={<ProjectShowcasePage />} />
+        
       </Routes>
     </BrowserRouter>
   );

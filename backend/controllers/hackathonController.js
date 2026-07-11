@@ -1,0 +1,195 @@
+const Hackathon = require("../models/Hackathon");
+
+// CREATE HACKATHON
+const createHackathon = async (req, res) => {
+  try {
+    const {
+      title,
+      description,
+      officialLink,
+      registrationDeadline,
+      startDate,
+      endDate,
+      techStack,
+      mode,
+      location,
+      prizePool,
+      maxTeamSize,
+    } = req.body;
+
+    if (!title || !description || !officialLink || !maxTeamSize) {
+      return res.status(400).json({
+        success: false,
+        message: "Please fill all required fields",
+      });
+    }
+
+    const hackathon = new Hackathon({
+      title,
+      description,
+      officialLink,
+      registrationDeadline,
+      startDate,
+      endDate,
+      techStack,
+      mode,
+      location,
+      prizePool,
+      maxTeamSize,
+      createdBy: req.user._id,
+    });
+
+    await hackathon.save();
+
+    return res.status(201).json({
+      success: true,
+      message: "Hackathon created successfully",
+      hackathon,
+    });
+  } catch (err) {
+    console.error(err);
+
+    return res.status(500).json({
+      success: false,
+      message: "Server Error",
+    });
+  }
+};
+
+// GET ALL HACKATHONS
+const getHackathons = async (req, res) => {
+  try {
+    const hackathons = await Hackathon.find()
+      .populate("createdBy", "username avatar")
+      .sort({ createdAt: -1 });
+
+    return res.status(200).json({
+      success: true,
+      message: "Hackathons fetched successfully",
+      hackathons,
+    });
+  } catch (err) {
+    console.error(err);
+
+    return res.status(500).json({
+      success: false,
+      message: "Server Error",
+    });
+  }
+};
+
+// GET SINGLE HACKATHON
+const getHackathonById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const hackathon = await Hackathon.findById(id)
+      .populate("createdBy", "username avatar")
+      .populate("members", "username avatar");
+
+    if (!hackathon) {
+      return res.status(404).json({
+        success: false,
+        message: "Hackathon not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Hackathon fetched successfully",
+      hackathon,
+    });
+  } catch (err) {
+    console.error(err);
+
+    return res.status(500).json({
+      success: false,
+      message: "Server Error",
+    });
+  }
+};
+
+// UPDATE HACKATHON
+const updateHackathon = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const hackathon = await Hackathon.findById(id);
+
+    if (!hackathon) {
+      return res.status(404).json({
+        success: false,
+        message: "Hackathon not found",
+      });
+    }
+
+    if (hackathon.createdBy.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: "You are not authorized to update this hackathon",
+      });
+    }
+
+    Object.assign(hackathon, req.body);
+
+    await hackathon.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Hackathon updated successfully",
+      hackathon,
+    });
+  } catch (err) {
+    console.error(err);
+
+    return res.status(500).json({
+      success: false,
+      message: "Server Error",
+    });
+  }
+};
+
+// DELETE HACKATHON
+const deleteHackathon = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const hackathon = await Hackathon.findById(id);
+
+    if (!hackathon) {
+      return res.status(404).json({
+        success: false,
+        message: "Hackathon not found",
+      });
+    }
+
+    if (hackathon.createdBy.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: "You are not authorized to delete this hackathon",
+      });
+    }
+
+    await hackathon.deleteOne();
+
+    return res.status(200).json({
+      success: true,
+      message: "Hackathon deleted successfully",
+    });
+  } catch (err) {
+    console.error(err);
+
+    return res.status(500).json({
+      success: false,
+      message: "Server Error",
+    });
+  }
+};
+
+module.exports = {
+  createHackathon,
+  getHackathons,
+  getHackathonById,
+  updateHackathon,
+  deleteHackathon,
+};

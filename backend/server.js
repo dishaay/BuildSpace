@@ -11,11 +11,13 @@ const authRoutes = require("./routes/authRoutes");
 const userRoutes = require("./routes/userRoutes");
 const projectRoutes = require("./routes/projectRoutes");
 const hackathonRoutes = require("./routes/hackathonRoutes");
+const joinRequestRoutes = require("./routes/joinRequestRoutes");
 
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/projects", projectRoutes);
 app.use("/api/hackathons", hackathonRoutes);
+app.use("/api/join-requests", joinRequestRoutes);
 
 
 app.get("/", (req, res) => {

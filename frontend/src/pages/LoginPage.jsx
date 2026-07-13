@@ -4,15 +4,27 @@ import { Terminal, Mail, Lock, ArrowRight } from "lucide-react";
 import GithubMark from "../components/common/GithubMark";
 import Button from "../components/common/Button";
 import ContributionGraph from "../components/common/ContributionGraph";
+import { login } from "../services/authService";
 
 export default function LoginPage() {
   const navigate = useNavigate();
   const [form, setForm] = useState({ email: "", password: "" });
 
-  function handleSubmit(e) {
-    e.preventDefault();
+const handleSubmit = async (e) => {
+  e.preventDefault();
+
+  try {
+    const response = await login(form);
+
+    localStorage.setItem("token", response.data.token);
+    localStorage.setItem("userId", response.data.user.id);
+
     navigate("/feed");
+  } catch (err) {
+    console.error(err.response?.data || err);
+    alert(err.response?.data?.message || "Login failed");
   }
+};
 
   return (
     <div className="min-h-screen bg-bg flex">

@@ -7,7 +7,9 @@ import DeveloperProfilePage from "./pages/DeveloperProfilePage";
 import CommunitiesPage from "./pages/CommunitiesPage";
 import HackathonFinderPage from "./pages/HackathonFinderPage";
 import ProjectShowcasePage from "./pages/ProjectShowcasePage";
-
+import EditProfilePage from "./pages/EditProfilePage";
+import CreateProject from "./pages/projects/createProject";
+import EditProject from "./pages/projects/EditProject";
 export default function App() {
   return (
     <BrowserRouter>
@@ -20,7 +22,9 @@ export default function App() {
         <Route path="/communities" element={<CommunitiesPage />} />
         <Route path="/hackathons" element={<HackathonFinderPage />} />
         <Route path="/projects" element={<ProjectShowcasePage />} />
-        
+        <Route path="/profile/edit" element={<EditProfilePage />} />
+        <Route path="/projects/create" element={<CreateProject />} />
+        <Route path="/projects/edit/:id" element={<EditProject />} />
       </Routes>
     </BrowserRouter>
   );

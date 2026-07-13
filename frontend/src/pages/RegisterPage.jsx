@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Terminal, Mail, Lock, User, ArrowRight, Check } from "lucide-react";
+import { register } from "../services/authService";
 import GithubMark from "../components/common/GithubMark";
 import Button from "../components/common/Button";
 
@@ -13,11 +14,23 @@ const perks = [
 export default function RegisterPage() {
   const navigate = useNavigate();
   const [form, setForm] = useState({ username: "", email: "", password: "" });
+const handleSubmit = async (e) => {
+  e.preventDefault();
 
-  function handleSubmit(e) {
-    e.preventDefault();
+  try {
+    const response = await register(form);
+
+    localStorage.setItem("token", response.data.token);
+    localStorage.setItem("userId", response.data.user.id);
+
+    alert("Registration successful!");
+
     navigate("/feed");
+  } catch (err) {
+    console.error(err.response?.data || err);
+    alert(err.response?.data?.message || "Registration failed");
   }
+};
 
   return (
     <div className="min-h-screen bg-bg flex">

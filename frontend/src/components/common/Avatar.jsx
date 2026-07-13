@@ -10,14 +10,27 @@ export default function Avatar({ user, size = "md", showOnline = false }) {
   return (
     <div className="relative shrink-0">
       <div
-        className={`${sizes[size]} ${user.avatarColor || "bg-accent-violet"} rounded-xl flex items-center justify-center font-display font-semibold text-white`}
+        className={`${sizes[size]} ${
+          user?.avatarColor || "bg-accent-violet"
+        } rounded-xl flex items-center justify-center font-display font-semibold text-white overflow-hidden`}
       >
-        {user.avatar}
+        {user?.avatar ? (
+          <img
+            src={user.avatar}
+            alt={user?.name || "Avatar"}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          (user?.name?.charAt(0) ||
+            user?.username?.charAt(0) ||
+            "?").toUpperCase()
+        )}
       </div>
+
       {showOnline && (
         <span
           className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-bg-surface ${
-            user.online ? "bg-accent-teal" : "bg-ink-faint"
+            user?.online ? "bg-accent-teal" : "bg-ink-faint"
           }`}
         />
       )}

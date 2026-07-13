@@ -1,49 +1,104 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Plus, SlidersHorizontal } from "lucide-react";
 import AppShell from "../components/layout/AppShell";
 import ProjectCard from "../components/feature/ProjectCard";
 import Button from "../components/common/Button";
 import Tag from "../components/common/Tag";
-import { projects } from "../data/dummyData";
+import { getProjects } from "../services/projectService";
 
-const filters = ["all", "looking for collaborators", "react", "node", "ml", "devops"];
+const filters = [
+  "all",
+  "In Progress",
+  "Completed",
+];
 
 export default function ProjectShowcasePage() {
-  const [active, setActive] = useState("all");
+  const navigate = useNavigate();
 
-  const filtered = projects.filter((p) => {
-    if (active === "all") return true;
-    if (active === "looking for collaborators") return p.lookingForCollaborators;
-    return p.tags.includes(active);
-  });
+  const [projects, setProjects] = useState([]);
+  const [active, setActive] = useState("all");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchProjects();
+  }, []);
+
+  async function fetchProjects() {
+    try {
+      const res = await getProjects();
+
+      setProjects(res.data.projects);
+    } catch (err) {
+      console.log(err);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const filteredProjects =
+    active === "all"
+      ? projects
+      : projects.filter((p) => p.status === active);
 
   return (
     <AppShell>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
-          <h1 className="font-display font-semibold text-2xl mb-1">Project showcase</h1>
-          <p className="text-ink-muted text-sm">What the community is building right now.</p>
+          <h1 className="font-display font-semibold text-2xl mb-1">
+            Project Showcase
+          </h1>
+
+          <p className="text-ink-muted text-sm">
+            Explore what developers are building.
+          </p>
         </div>
-        <Button icon={Plus}>Submit project</Button>
+
+        <Button
+          icon={Plus}
+          onClick={() => navigate("/projects/create")}
+        >
+          Submit Project
+        </Button>
       </div>
 
       <div className="flex items-center gap-2 mb-6 flex-wrap">
-        <SlidersHorizontal size={14} className="text-ink-faint" />
-        {filters.map((f) => (
-          <Tag key={f} active={active === f} onClick={() => setActive(f)}>
-            {f}
+        <SlidersHorizontal
+          size={15}
+          className="text-ink-faint"
+        />
+
+        {filters.map((filter) => (
+          <Tag
+            key={filter}
+            active={active === filter}
+            onClick={() => setActive(filter)}
+          >
+            {filter}
           </Tag>
         ))}
       </div>
 
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filtered.map((p) => (
-          <ProjectCard key={p.id} project={p} />
-        ))}
-        {filtered.length === 0 && (
-          <p className="text-sm text-ink-faint col-span-full">No projects match that filter yet.</p>
-        )}
-      </div>
+      {loading ? (
+        <p className="text-center py-10 text-ink-muted">
+          Loading projects...
+        </p>
+      ) : (
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredProjects.map((project) => (
+            <ProjectCard
+              key={project._id}
+              project={project}
+            />
+          ))}
+
+          {filteredProjects.length === 0 && (
+            <p className="text-sm text-ink-faint col-span-full text-center">
+              No projects found.
+            </p>
+          )}
+        </div>
+      )}
     </AppShell>
   );
 }

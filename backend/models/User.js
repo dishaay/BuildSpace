@@ -42,6 +42,25 @@ const userSchema = new mongoose.Schema({
     type: [String],
     default: [],
   },
+  college: {
+  type: String,
+  default: "",
+},
+
+year: {
+  type: String,
+  default: "",
+},
+
+lookingForTeam: {
+  type: Boolean,
+  default: false,
+},
+
+linkedin: {
+  type: String,
+  default: "",
+},
 
   avatar: {
     type: String,

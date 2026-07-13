@@ -1,51 +1,92 @@
-import { Star, GitFork, Users } from "lucide-react";
+import GithubMark from "../common/GithubMark";
 import Avatar from "../common/Avatar";
 import Tag from "../common/Tag";
+import { Heart, ExternalLink, User,Bookmark } from "lucide-react";
+import { Link } from "react-router-dom";
 
 export default function ProjectCard({ project }) {
   return (
-    <div className="bg-bg-surface border border-border rounded-xl p-5 flex flex-col gap-3 hover:border-ink-faint/40 transition-colors group">
-      <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0">
-          <h3 className="font-mono font-semibold text-ink group-hover:text-accent-violet transition-colors truncate">
-            {project.name}
-          </h3>
-          <p className="text-sm text-ink-muted mt-1 leading-relaxed">{project.tagline}</p>
-        </div>
-        {project.lookingForCollaborators && (
-          <span className="shrink-0 text-[10px] font-mono font-medium px-2 py-1 rounded-full bg-accent-teal/15 text-accent-teal border border-accent-teal/30">
-            open to collab
-          </span>
-        )}
+    <div className="bg-bg-surface border border-border rounded-xl p-5 flex flex-col gap-4 hover:border-accent-violet transition">
+
+      {/* Title */}
+      <div>
+        <h3 className="font-display text-lg font-semibold">
+          {project.title}
+        </h3>
+
+        <p className="text-sm text-ink-muted mt-2">
+          {project.description}
+        </p>
       </div>
 
-      <div className="flex gap-2 flex-wrap">
-        {project.tags.map((t) => (
-          <Tag key={t}>{t}</Tag>
+      {project.createdBy?._id === JSON.parse(localStorage.getItem("user"))?._id && (
+  <Link
+    to={`/projects/edit/${project._id}`}
+    className="text-blue-500 hover:underline text-sm"
+  >
+    Edit
+  </Link>
+)}
+
+<button
+  onClick={handleDelete}
+  className="text-red-500 hover:underline text-sm"
+>
+  Delete
+</button>
+
+      {/* Tech Stack */}
+      <div className="flex flex-wrap gap-2">
+        {(project.techStack || []).map((tech) => (
+          <Tag key={tech}>{tech}</Tag>
         ))}
       </div>
 
-      <div className="flex items-center justify-between pt-2 mt-auto border-t border-border-soft">
-        <div className="flex items-center gap-2">
-          <Avatar user={project.owner} size="xs" />
-          <span className="text-xs text-ink-muted">{project.owner.displayName}</span>
-        </div>
-        <div className="flex items-center gap-3 text-ink-faint text-xs font-mono">
-          <span className="flex items-center gap-1">
-            <span
-              className="w-2.5 h-2.5 rounded-full inline-block"
-              style={{ backgroundColor: project.languageColor }}
-            />
-            {project.language}
-          </span>
-          <span className="flex items-center gap-1">
-            <Star size={13} /> {project.stars.toLocaleString()}
-          </span>
-          <span className="flex items-center gap-1">
-            <GitFork size={13} /> {project.forks}
-          </span>
+      {/* Owner */}
+      <div className="flex items-center gap-3">
+        <Avatar user={project.createdBy} size="sm" />
+
+        <div>
+          <p className="text-sm font-medium">
+            {project.createdBy?.username}
+          </p>
+
+          <p className="text-xs text-ink-muted">
+            {project.status}
+          </p>
         </div>
       </div>
+
+      {/* Bottom */}
+      <div className="flex justify-between items-center pt-3 border-t border-border">
+
+        <div className="flex gap-4 text-sm">
+
+          <div className="flex items-center gap-1">
+            <Heart size={16} />
+            {project.likes?.length || 0}
+          </div>
+
+          <div className="flex items-center gap-1">
+            <Bookmark size={16} />
+            {project.bookmarks?.length || 0}
+          </div>
+
+        </div>
+
+        {project.githubLink && (
+          <a
+            href={project.githubLink}
+            target="_blank"
+            rel="noreferrer"
+            className="text-accent-violet hover:underline flex items-center gap-1"
+          >
+            <GithubMark size={16} />
+            GitHub
+          </a>
+        )}
+      </div>
+
     </div>
   );
 }

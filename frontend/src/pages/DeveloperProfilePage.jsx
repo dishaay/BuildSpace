@@ -1,31 +1,117 @@
-import { useState } from "react";
 import { Link } from "react-router-dom";
-import { MapPin, Calendar, LinkIcon, Star, GitFork, Users, Trophy, FolderGit2, FileText } from "lucide-react";
+import { useState, useEffect } from "react";
+import { MapPin, Calendar, LinkIcon, Trophy, FolderGit2, FileText } from "lucide-react";
 import GithubMark from "../components/common/GithubMark";
 import AppShell from "../components/layout/AppShell";
 import Avatar from "../components/common/Avatar";
 import Tag from "../components/common/Tag";
 import Button from "../components/common/Button";
 import ContributionGraph from "../components/common/ContributionGraph";
-import { currentUser, projects, posts } from "../data/dummyData";
+import { getProfile } from "../services/userService";
+import { getProjects } from "../services/projectService";
+import { getHackathons } from "../services/hackathonService";
 
 const tabs = ["Overview", "Projects", "Hackathons", "Posts", "Activity"];
 
-// Hackathons this user has participated in. Not modeled in dummyData.js yet —
-// swap for a real `GET /api/users/:id/hackathons` fetch once that exists.
-const myHackathons = [
-  { id: "mh1", name: "BuildFast Global Hackathon", date: "Mar 2026", role: "Frontend", result: "Top 10" },
-  { id: "mh2", name: "GreenTech Sprint", date: "Nov 2025", role: "Full-stack", result: "Winner" },
-  { id: "mh3", name: "HealthHack Asia", date: "Jul 2025", role: "Backend" },
-];
-
-// Same reasoning as above — not on the User model in dummyData.js yet.
-const isLookingForTeam = true;
+function getId(value) {
+  if (!value) return null;
+  return typeof value === "string" ? value : value._id || value.id;
+}
 
 export default function DeveloperProfilePage() {
+  const [profile, setProfile] = useState(null);
+  const [myProjects, setMyProjects] = useState([]);
+  const [myHackathons, setMyHackathons] = useState([]);
+  // No posts service exists yet — kept as an empty list so the Posts tab
+  // has something to map over without inventing a data source.
+  const [myPosts] = useState([]);
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [tab, setTab] = useState("Overview");
-  const myProjects = projects.filter((p) => p.owner.id === currentUser.id || p.owner.id === "u1");
-  const myPosts = posts.slice(0, 2);
+
+  useEffect(() => {
+    let ignore = false;
+
+    async function fetchProfileData() {
+  setLoading(true);
+  setError("");
+
+  try {
+    // Get profile
+    const profileRes = await getProfile();
+    console.log("PROFILE RESPONSE:", profileRes.data);
+
+    const profileData = profileRes.data.user;
+    const currentUserId = profileData._id;
+
+    // Get projects
+    const projectsRes = await getProjects();
+    console.log("PROJECTS RESPONSE:", projectsRes.data);
+
+    // Get hackathons
+    const hackathonsRes = await getHackathons();
+    console.log("HACKATHONS RESPONSE:", hackathonsRes.data);
+
+    const allProjects =
+      projectsRes.data.projects ||
+      projectsRes.data.data ||
+      [];
+
+    const allHackathons =
+      hackathonsRes.data.hackathons ||
+      hackathonsRes.data.data ||
+      [];
+
+    if (ignore) return;
+
+    setProfile(profileData);
+
+    setMyProjects(
+      allProjects.filter((p) => getId(p.createdBy) === currentUserId)
+    );
+
+    setMyHackathons(
+      allHackathons.filter((h) => getId(h.createdBy) === currentUserId)
+    );
+
+  } catch (err) {
+    console.error("FULL ERROR:", err);
+    console.error("RESPONSE:", err.response);
+
+    if (!ignore) {
+      setError(err.response?.data?.message || "Couldn't load your profile.");
+    }
+  } finally {
+    if (!ignore) setLoading(false);
+  }
+    }
+
+    fetchProfileData();
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
+  if (loading) {
+    return (
+      <AppShell>
+        <div className="flex items-center justify-center py-24">
+          <p className="text-sm text-ink-muted">Loading profile...</p>
+        </div>
+      </AppShell>
+    );
+  }
+
+  if (error || !profile) {
+    return (
+      <AppShell>
+        <div className="flex items-center justify-center py-24">
+          <p className="text-sm text-accent-coral">{error || "Profile not found."}</p>
+        </div>
+      </AppShell>
+    );
+  }
 
   const stats = [
     { label: "Projects", value: myProjects.length, icon: FolderGit2 },
@@ -38,21 +124,14 @@ export default function DeveloperProfilePage() {
       <div className="grid lg:grid-cols-[280px_1fr] gap-6 items-start">
         {/* Left: profile card */}
         <aside className="bg-bg-surface border border-border rounded-xl p-6 flex flex-col items-center text-center lg:sticky lg:top-24">
-          <Avatar user={currentUser} size="xl" />
+          <Avatar user={profile} size="xl" />
 
           <div className="flex items-center gap-2 flex-wrap justify-center mt-4">
-            <h1 className="font-display font-semibold text-xl">{currentUser.displayName}</h1>
+            <h1 className="font-display font-semibold text-xl">{profile.name}</h1>
           </div>
-          <p className="font-mono text-sm text-ink-faint">@{currentUser.username}</p>
+          <p className="font-mono text-sm text-ink-faint">@{profile.username}</p>
 
-          {isLookingForTeam && (
-            <span className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full bg-accent-violet/15 text-accent-violet border border-accent-violet/30 mt-3">
-              <Users size={12} />
-              Looking for a team
-            </span>
-          )}
-
-          <p className="text-sm text-ink-muted mt-3 leading-relaxed">{currentUser.bio}</p>
+          <p className="text-sm text-ink-muted mt-3 leading-relaxed">{profile.bio}</p>
 
           <Link to="/profile/edit" className="w-full mt-4">
             <Button size="sm" className="w-full">
@@ -71,33 +150,18 @@ export default function DeveloperProfilePage() {
             ))}
           </div>
 
-          <div className="w-full flex justify-around mt-5 pt-5 border-t border-border-soft">
-            <div>
-              <p className="font-display font-semibold text-sm">{currentUser.followers}</p>
-              <p className="text-xs text-ink-faint">Followers</p>
-            </div>
-            <div>
-              <p className="font-display font-semibold text-sm">{currentUser.following}</p>
-              <p className="text-xs text-ink-faint">Following</p>
-            </div>
-            <div>
-              <p className="font-display font-semibold text-sm">{currentUser.streak}🔥</p>
-              <p className="text-xs text-ink-faint">Streak</p>
-            </div>
-          </div>
-
           <div className="w-full flex flex-col gap-2.5 mt-5 pt-5 border-t border-border-soft text-sm text-ink-muted">
             <div className="flex items-center gap-2 justify-center">
-              <MapPin size={14} /> {currentUser.location}
+              <MapPin size={14} /> {profile.location}
             </div>
             <div className="flex items-center gap-2 justify-center">
-              <Calendar size={14} /> Joined {currentUser.joined}
+              <Calendar size={14} /> Joined {new Date(profile.createdAt).toLocaleDateString()}
             </div>
             <div className="flex items-center gap-2 justify-center">
-              <GithubMark size={14} /> {currentUser.links.github}
+              <GithubMark size={14} /> {profile.github}
             </div>
             <div className="flex items-center gap-2 justify-center">
-              <LinkIcon size={14} /> {currentUser.links.website}
+              <LinkIcon size={14} /> {profile.portfolio}
             </div>
           </div>
 
@@ -106,7 +170,7 @@ export default function DeveloperProfilePage() {
               Skills
             </p>
             <div className="flex flex-wrap gap-2 justify-center">
-              {currentUser.skills.map((s) => (
+              {(profile.skills || []).map((s) => (
                 <Tag key={s}>{s}</Tag>
               ))}
             </div>
@@ -156,16 +220,14 @@ export default function DeveloperProfilePage() {
                 </div>
                 <div className="grid sm:grid-cols-2 gap-3">
                   {myProjects.slice(0, 2).map((p) => (
-                    <div key={p.id} className="bg-bg-surface border border-border rounded-xl p-4">
-                      <p className="font-mono text-sm text-accent-violet mb-1">{p.name}</p>
-                      <p className="text-xs text-ink-muted leading-relaxed mb-3">{p.tagline}</p>
-                      <div className="flex items-center gap-3 text-xs text-ink-faint font-mono">
-                        <span className="flex items-center gap-1">
-                          <span className="w-2.5 h-2.5 rounded-full inline-block" style={{ backgroundColor: p.languageColor }} />
-                          {p.language}
-                        </span>
-                        <span className="flex items-center gap-1"><Star size={12} /> {p.stars}</span>
-                        <span className="flex items-center gap-1"><GitFork size={12} /> {p.forks}</span>
+                    <div key={p._id || p.id} className="bg-bg-surface border border-border rounded-xl p-4">
+                      <p className="font-mono text-sm text-accent-violet mb-1">{p.title}</p>
+                      <p className="text-xs text-ink-muted leading-relaxed mb-3">{p.description}</p>
+                      <div className="flex items-center gap-3 text-xs text-ink-faint font-mono flex-wrap">
+                        {(p.techStack || []).slice(0, 3).map((t) => (
+                          <span key={t}>{t}</span>
+                        ))}
+                        {p.status && <span>· {p.status}</span>}
                       </div>
                     </div>
                   ))}
@@ -191,23 +253,26 @@ export default function DeveloperProfilePage() {
                 <div className="flex flex-col gap-2.5">
                   {myHackathons.slice(0, 2).map((h) => (
                     <div
-                      key={h.id}
+                      key={h._id || h.id}
                       className="flex items-center justify-between gap-3 bg-bg-surface border border-border rounded-xl px-4 py-3"
                     >
                       <div className="min-w-0">
-                        <p className="text-sm text-ink truncate">{h.name}</p>
+                        <p className="text-sm text-ink truncate">{h.title}</p>
                         <p className="text-xs text-ink-faint font-mono mt-0.5">
-                          {h.date}
-                          {h.role ? ` · ${h.role}` : ""}
+                          Max team size {h.maxTeamSize}
+                          {Array.isArray(h.members) ? ` · ${h.members.length} members` : ""}
                         </p>
                       </div>
-                      {h.result && (
+                      {h.status && (
                         <span className="text-xs font-mono px-2.5 py-1 rounded-full bg-accent-teal/15 text-accent-teal border border-accent-teal/30 shrink-0">
-                          {h.result}
+                          {h.status}
                         </span>
                       )}
                     </div>
                   ))}
+                  {myHackathons.length === 0 && (
+                    <p className="text-sm text-ink-faint">No hackathons yet.</p>
+                  )}
                 </div>
               </div>
             </div>
@@ -216,12 +281,14 @@ export default function DeveloperProfilePage() {
           {tab === "Projects" && (
             <div className="grid sm:grid-cols-2 gap-3">
               {myProjects.map((p) => (
-                <div key={p.id} className="bg-bg-surface border border-border rounded-xl p-4">
-                  <p className="font-mono text-sm text-accent-violet mb-1">{p.name}</p>
-                  <p className="text-xs text-ink-muted leading-relaxed mb-3">{p.tagline}</p>
-                  <div className="flex items-center gap-3 text-xs text-ink-faint font-mono">
-                    <span className="flex items-center gap-1"><Star size={12} /> {p.stars}</span>
-                    <span className="flex items-center gap-1"><GitFork size={12} /> {p.forks}</span>
+                <div key={p._id || p.id} className="bg-bg-surface border border-border rounded-xl p-4">
+                  <p className="font-mono text-sm text-accent-violet mb-1">{p.title}</p>
+                  <p className="text-xs text-ink-muted leading-relaxed mb-3">{p.description}</p>
+                  <div className="flex items-center gap-3 text-xs text-ink-faint font-mono flex-wrap">
+                    {(p.techStack || []).map((t) => (
+                      <span key={t}>{t}</span>
+                    ))}
+                    {p.status && <span>· {p.status}</span>}
                   </div>
                 </div>
               ))}
@@ -235,25 +302,25 @@ export default function DeveloperProfilePage() {
             <div className="flex flex-col gap-3">
               {myHackathons.map((h) => (
                 <div
-                  key={h.id}
+                  key={h._id || h.id}
                   className="flex items-center justify-between gap-3 bg-bg-surface border border-border rounded-xl p-4"
                 >
                   <div className="min-w-0">
-                    <p className="font-medium text-ink truncate">{h.name}</p>
+                    <p className="font-medium text-ink truncate">{h.title}</p>
                     <p className="text-xs text-ink-faint font-mono mt-1">
-                      {h.date}
-                      {h.role ? ` · ${h.role}` : ""}
+                      Max team size {h.maxTeamSize}
+                      {Array.isArray(h.members) ? ` · ${h.members.length} members` : ""}
                     </p>
                   </div>
-                  {h.result && (
+                  {h.status && (
                     <span className="text-xs font-mono px-2.5 py-1 rounded-full bg-accent-teal/15 text-accent-teal border border-accent-teal/30 shrink-0">
-                      {h.result}
+                      {h.status}
                     </span>
                   )}
                 </div>
               ))}
               {myHackathons.length === 0 && (
-                <p className="text-sm text-ink-faint">No hackathons attended yet.</p>
+                <p className="text-sm text-ink-faint">No hackathons yet.</p>
               )}
             </div>
           )}
@@ -261,29 +328,17 @@ export default function DeveloperProfilePage() {
           {tab === "Posts" && (
             <div className="flex flex-col gap-3">
               {myPosts.map((post) => (
-                <div key={post.id} className="bg-bg-surface border border-border rounded-xl p-4">
-                  <p className="font-mono text-xs text-accent-violet mb-1.5">#{post.community}</p>
+                <div key={post._id || post.id} className="bg-bg-surface border border-border rounded-xl p-4">
                   <p className="font-medium text-ink mb-1">{post.title}</p>
-                  <p className="text-xs text-ink-faint font-mono">{post.upvotes} upvotes · {post.comments} comments</p>
                 </div>
               ))}
+              {myPosts.length === 0 && <p className="text-sm text-ink-faint">No posts yet.</p>}
             </div>
           )}
 
           {tab === "Activity" && (
             <div className="flex flex-col gap-3 font-mono text-sm text-ink-muted">
-              <div className="bg-bg-surface border border-border rounded-xl p-4">
-                <span className="text-accent-teal">+</span> merged PR in <span className="text-accent-violet">sprig</span>
-                <span className="text-ink-faint ml-2 text-xs">2h ago</span>
-              </div>
-              <div className="bg-bg-surface border border-border rounded-xl p-4">
-                <span className="text-accent-amber">→</span> replied in <span className="text-accent-violet">#react-devs</span>
-                <span className="text-ink-faint ml-2 text-xs">6h ago</span>
-              </div>
-              <div className="bg-bg-surface border border-border rounded-xl p-4">
-                <span className="text-accent-coral">★</span> starred <span className="text-accent-violet">cronwatch</span>
-                <span className="text-ink-faint ml-2 text-xs">1d ago</span>
-              </div>
+              <p className="text-sm text-ink-faint font-sans">No recent activity yet.</p>
             </div>
           )}
         </div>

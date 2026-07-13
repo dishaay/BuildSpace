@@ -1,7 +1,9 @@
+import { getProfile } from "../../services/userService";
+
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
-import axios from "axios";
-import { Github, Linkedin, Globe, Trophy, FolderGit2, Users, ExternalLink } from "lucide-react";
+import { Trophy, FolderGit2, Users, ExternalLink, Globe } from "lucide-react";
+import GithubMark from "../../components/common/GithubMark";
+import LinkedinMark from "../../components/common/LinkedinMark";
 
 const statusStyles = {
   "In Progress": "bg-amber-500/15 text-amber-400 border-amber-500/30",
@@ -18,8 +20,6 @@ function SectionHeading({ icon: Icon, children }) {
 }
 
 export default function PublicProfilePage() {
-  const { id } = useParams();
-
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -31,12 +31,8 @@ export default function PublicProfilePage() {
       setLoading(true);
       setError("");
       try {
-        const token = localStorage.getItem("accessToken");
-        const res = await axios.get(`/api/users/${id}`, {
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-        });
-
-        const data = res.data?.data || res.data;
+        const res = await getProfile();
+        const data = res?.data?.data || res?.data || res;
         if (!ignore) setProfile(data);
       } catch (err) {
         if (!ignore) {
@@ -51,7 +47,7 @@ export default function PublicProfilePage() {
     return () => {
       ignore = true;
     };
-  }, [id]);
+  }, []);
 
   if (loading) {
     return (
@@ -128,7 +124,7 @@ export default function PublicProfilePage() {
                     rel="noreferrer"
                     className="inline-flex items-center gap-1.5 text-sm text-slate-300 border border-slate-700 hover:border-indigo-500/50 hover:text-indigo-300 rounded-lg px-3 py-1.5 transition-colors"
                   >
-                    <Github size={14} />
+                    <GithubMark size={14} />
                     GitHub
                   </a>
                 )}
@@ -139,7 +135,7 @@ export default function PublicProfilePage() {
                     rel="noreferrer"
                     className="inline-flex items-center gap-1.5 text-sm text-slate-300 border border-slate-700 hover:border-indigo-500/50 hover:text-indigo-300 rounded-lg px-3 py-1.5 transition-colors"
                   >
-                    <Linkedin size={14} />
+                    <LinkedinMark size={14} />
                     LinkedIn
                   </a>
                 )}

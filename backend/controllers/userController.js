@@ -1,38 +1,51 @@
-let getMe= ((req,res)=>{
+    let getMe= ((req,res)=>{
 
-  try{
-  return res.status(200).json({
-   success:true,
-   user: req.user})
-  }
+    try{
+        console.log("===== GET PROFILE CALLED =====");
+  console.log(req.user);
+    return res.status(200).json({
+    success:true,
+    user: req.user})
+    }
 
-  catch(err){
-    console.log(err);
-    return res.status(500).json({
-      success:false,
-      message:"Server error"
-    })
-  }
-})// this displays the user info. 
+    catch(err){
+        console.log(err);
+        return res.status(500).json({
+        success:false,
+        message:"Server error"
+        })
+    }
+    })// this displays the user info. 
 
 let updateProfile = async (req, res) => {
     try {
 
         const {
-            name,
-            bio,
-            location,
-            github,
-            portfolio,
-            skills
-        } = req.body;
+    username,
+    name,
+    bio,
+    location,
+    github,
+    portfolio,
+    linkedin,
+    college,
+    year,
+    lookingForTeam,
+    skills
+} = req.body;
 
-        req.user.name = name || req.user.name;
-        req.user.bio = bio || req.user.bio;
-        req.user.location = location || req.user.location;
-        req.user.github = github || req.user.github;
-        req.user.portfolio = portfolio || req.user.portfolio;
-        req.user.skills = skills || req.user.skills;
+        if (username !== undefined) req.user.username = username;
+if (name !== undefined) req.user.name = name;
+if (bio !== undefined) req.user.bio = bio;
+if (location !== undefined) req.user.location = location;
+if (github !== undefined) req.user.github = github;
+if (portfolio !== undefined) req.user.portfolio = portfolio;
+if (linkedin !== undefined) req.user.linkedin = linkedin;
+if (college !== undefined) req.user.college = college;
+if (year !== undefined) req.user.year = year;
+if (lookingForTeam !== undefined)
+    req.user.lookingForTeam = lookingForTeam;
+if (skills !== undefined) req.user.skills = skills;
 
         await req.user.save();
 

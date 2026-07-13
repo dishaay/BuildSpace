@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import { useNavigate } from "react-router-dom";
+import { getProfile, updateProfile } from "../services/userService";
 
 const YEAR_OPTIONS = ["1st Year", "2nd Year", "3rd Year", "4th Year", "Graduate", "Other"];
 
@@ -42,6 +43,7 @@ const emptyForm = {
 };
 
 export default function EditProfilePage() {
+  const navigate = useNavigate();
   const [form, setForm] = useState(emptyForm);
   const [avatarFile, setAvatarFile] = useState(null);
   const [avatarPreview, setAvatarPreview] = useState("");
@@ -60,25 +62,21 @@ export default function EditProfilePage() {
       setLoading(true);
       setLoadError("");
       try {
-        const token = localStorage.getItem("accessToken");
-        const res = await axios.get("/api/users/profile", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        const profile = res.data?.data || res.data;
+const res = await getProfile();
+const profile = res.data.user;
         if (ignore || !profile) return;
 
         setForm({
-          username: profile.username || "",
-          bio: profile.bio || "",
-          skills: toCommaString(profile.skills),
-          githubUrl: profile.githubUrl || "",
-          linkedinUrl: profile.linkedinUrl || "",
-          portfolioUrl: profile.portfolioUrl || "",
-          college: profile.college || "",
-          year: profile.year || YEAR_OPTIONS[0],
-          lookingForTeam: Boolean(profile.lookingForTeam),
-        });
+  username: profile.name || profile.username || "",
+  bio: profile.bio || "",
+  skills: toCommaString(profile.skills),
+  githubUrl: profile.github || "",
+  linkedinUrl: profile.linkedin || "",
+  portfolioUrl: profile.portfolio || "",
+  college: profile.location || "",
+  year: profile.year || YEAR_OPTIONS[0],
+  lookingForTeam: profile.lookingForTeam || false,
+});
         setAvatarPreview(profile.profilePicture || profile.avatarUrl || "");
       } catch (err) {
         if (!ignore) {
@@ -113,28 +111,21 @@ export default function EditProfilePage() {
     setSaving(true);
 
     try {
-      const token = localStorage.getItem("accessToken");
+const payload = {
+  name: form.username,
+  bio: form.bio,
+  location: form.college,
+  github: form.githubUrl,
+  portfolio: form.portfolioUrl,
+  skills: toList(form.skills),
+};
 
-      const payload = {
-        username: form.username,
-        bio: form.bio,
-        skills: toList(form.skills),
-        githubUrl: form.githubUrl,
-        linkedinUrl: form.linkedinUrl,
-        portfolioUrl: form.portfolioUrl,
-        college: form.college,
-        year: form.year,
-        lookingForTeam: form.lookingForTeam,
-        // Note: profile picture upload is UI-only here. Once the backend
-        // supports file uploads, send avatarFile via multipart/form-data
-        // instead of (or alongside) this JSON payload.
-      };
-
-      await axios.put("/api/users/profile", payload, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+await updateProfile(payload);
 
       setSaveSuccess(true);
+      setTimeout(() => {
+  navigate("/profile");
+}, 800);
     } catch (err) {
       setSaveError(err.response?.data?.message || "Something went wrong while saving your profile.");
     } finally {

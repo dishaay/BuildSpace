@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
-import { ImagePlus, Github, Link2, X, Loader2 } from "lucide-react";
-import AppShell from "../components/layout/AppShell";
-import Button from "../components/common/Button";
-import Tag from "../components/common/Tag";
+import { createProject } from "../../services/projectService";
+import { ImagePlus, Link2, X, Loader2 } from "lucide-react";
+
+import AppShell from "../../components/layout/AppShell";
+import Button from "../../components/common/Button";
+import Tag from "../../components/common/Tag";
 
 const statusOptions = ["In Progress", "Completed"];
 
@@ -67,8 +68,6 @@ export default function CreateProject() {
     setSubmitting(true);
 
     try {
-      const token = localStorage.getItem("accessToken");
-
       const payload = {
         title: form.title,
         description: form.description,
@@ -82,11 +81,7 @@ export default function CreateProject() {
         // backend supports it.
       };
 
-      await axios.post("/api/projects", payload, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+await createProject(payload);
 
       navigate("/projects");
     } catch (err) {
@@ -162,14 +157,14 @@ export default function CreateProject() {
           <div className="grid sm:grid-cols-2 gap-4">
             <Field label="GitHub link">
               <div className="relative">
-                <Github size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-faint" />
-                <input
-                  type="url"
-                  value={form.githubLink}
-                  onChange={(e) => updateField("githubLink", e.target.value)}
-                  placeholder="https://github.com/you/project"
-                  className={`${inputClass} pl-9`}
-                />
+            <svg width="15" height="15"></svg>
+          <input
+            type="url"
+            value={form.githubLink}
+            onChange={(e) => updateField("githubLink", e.target.value)}
+            placeholder="https://github.com/you/project"
+            className={inputClass}
+/>
               </div>
             </Field>
 

@@ -56,11 +56,11 @@ export default function EditProject() {
       setLoading(true);
       setLoadError("");
       try {
-        const token = localStorage.getItem("accessToken");
+        const token = localStorage.getItem("token");
         const res = await axios.get(`/api/projects/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-
+        console.log(res.data);
       const project = res.data.project;
       console.log(project)
         if (ignore || !project) return;
@@ -112,7 +112,7 @@ export default function EditProject() {
     setThumbnailPreview("");
   }
 
-  function toList(value) {
+  function toList(value = "") {
     return value
       .split(",")
       .map((item) => item.trim())
@@ -125,8 +125,8 @@ export default function EditProject() {
     setSubmitting(true);
 
     try {
-      const token = localStorage.getItem("accessToken");
-
+      const token = localStorage.getItem("token");
+      console.log(form);
       const payload = {
   title: form.title,
   description: form.description,
@@ -141,17 +141,25 @@ export default function EditProject() {
   status: form.status,
   screenshots: toList(form.screenshots),
 };
-
+      console.log(payload);
+console.log(id);
+console.log(token)
       await axios.put(`/api/projects/${id}`, payload, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
       navigate(`/projects`);
     } catch (err) {
-      setSubmitError(
-        err.response?.data?.message || "Something went wrong while saving your changes."
-      );
-    } finally {
+  console.log(err);
+  console.log(err.response);
+  console.log(err.message);
+
+  setSubmitError(
+    err.response?.data?.message ||
+    err.message ||
+    "Something went wrong while saving your changes."
+  );
+}finally {
       setSubmitting(false);
     }
   }
@@ -225,6 +233,42 @@ export default function EditProject() {
               className={`${inputClass} resize-none`}
             />
           </Field>
+
+            <Field label="What inspired this project?">
+  <textarea
+    rows={3}
+    value={form.inspiration}
+    onChange={(e) => updateField("inspiration", e.target.value)}
+    className={`${inputClass} resize-none`}
+  />
+</Field>
+
+<Field label="Development Journey">
+  <textarea
+    rows={4}
+    value={form.journey}
+    onChange={(e) => updateField("journey", e.target.value)}
+    className={`${inputClass} resize-none`}
+  />
+</Field>
+
+<Field label="Challenges Faced">
+  <textarea
+    rows={3}
+    value={form.challenges}
+    onChange={(e) => updateField("challenges", e.target.value)}
+    className={`${inputClass} resize-none`}
+  />
+</Field>
+
+<Field label="Future Improvements">
+  <textarea
+    rows={3}
+    value={form.futurePlans}
+    onChange={(e) => updateField("futurePlans", e.target.value)}
+    className={`${inputClass} resize-none`}
+  />
+</Field>
 
           <Field label="Tech stack" hint="Comma separated, e.g. React, Node.js, MongoDB">
             <input

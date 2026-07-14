@@ -57,7 +57,7 @@ export default function EditHackathonPage() {
       setLoading(true);
       setLoadError("");
       try {
-        const token = localStorage.getItem("accessToken");
+        const token = localStorage.getItem("token");
         // Axios placeholder — swap for the real endpoint once it's live.
         const res = await axios.get(`/api/hackathons/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
@@ -105,7 +105,7 @@ export default function EditHackathonPage() {
     setSubmitting(true);
 
     try {
-      const token = localStorage.getItem("accessToken");
+      const token = localStorage.getItem("token");
 
       const payload = {
         title: form.title,

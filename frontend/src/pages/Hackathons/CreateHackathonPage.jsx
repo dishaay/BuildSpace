@@ -47,7 +47,7 @@ export default function CreateHackathonPage() {
     setSubmitting(true);
 
     try {
-      const token = localStorage.getItem("accessToken");
+      const token = localStorage.getItem("token");
 
       const payload = {
         title: form.title,

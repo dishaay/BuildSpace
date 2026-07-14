@@ -1,41 +1,44 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 
-const protect = async(req,res,next)=>{
-  try{
-  const authHeader= req.headers.authorization;
-  console.log(authHeader); // will print undefined. 
+const protect = async (req, res, next) => {
+    let token;
 
-  if(!authHeader){
-    return res.status(401).json({
-      message: "Access denied. No token provided"
-    })
-  } // we need to make sure that the header even exists before storing it in the token. never use something before checking that it exists. 
+    console.log("HEADERS:", req.headers.authorization);
 
-  const parts= authHeader.split(" ");//this will split my parts
+    if (
+        req.headers.authorization &&
+        req.headers.authorization.startsWith("Bearer")
+    ) {
+        try {
+            token = req.headers.authorization.split(" ")[1];
 
-  const token= parts[1];//take the token from the header. 
+            console.log("TOKEN:", token);
 
-  //i have taken the token from the header, my next job is to see verify the token 
+            const decoded = jwt.verify(
+                token,
+                process.env.JWT_SECRET
+            );
 
-  const decoded= jwt.verify(token, process.env.JWT_SECRET);
+            console.log("DECODED:", decoded);
 
-  const user= await User.findById(decoded.userId); 
-        if (!user) {
+            req.user = {
+                _id: decoded.userId,
+            };
+
+            next();
+        } catch (err) {
+            console.log("JWT ERROR:", err.message);
+
             return res.status(401).json({
-                message: "User not found"
+                message: "Unauthorized",
             });
         }
-
-        req.user = user;
-
-        next();
-
-    } catch (err) {
+    } else {
         return res.status(401).json({
-            message: "Invalid token"
+            message: "No token",
         });
     }
-  }
+};
 
-module.exports=protect;
+module.exports = protect;

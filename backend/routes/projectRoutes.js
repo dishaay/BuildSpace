@@ -18,6 +18,7 @@ router.get("/", getProjects);
 
 router.get("/:id", getProjectById);
 
+
 router.put("/:id", protect, updateProject);
 
 router.delete("/:id", protect, deleteProject);

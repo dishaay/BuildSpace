@@ -53,7 +53,7 @@ export default function HackathonDetailsPage() {
       setLoading(true);
       setError("");
       try {
-        const token = localStorage.getItem("accessToken");
+        const token = localStorage.getItem("token");
         // Axios placeholder — swap for the real endpoint once it's live.
         const res = await axios.get(`/api/hackathons/${id}`, {
           headers: token ? { Authorization: `Bearer ${token}` } : {},
@@ -81,7 +81,7 @@ export default function HackathonDetailsPage() {
     setJoining(true);
 
     try {
-      const token = localStorage.getItem("accessToken");
+      const token = localStorage.getItem("token");
       // Axios placeholder — swap for the real endpoint once it's live.
       await axios.post(
         "/api/join-requests",

@@ -76,6 +76,9 @@ const getProjects=async(req,res)=>{
 
 const getProjectById = async (req, res) => {
   try {
+        console.log("GET PROJECT BY ID CALLED");
+            console.log(req.params.id);
+
     const { id } = req.params;
 
     const project = await Project.findById(id).populate(
@@ -142,10 +145,17 @@ const updateProject = async (req, res) => {
 
     if (title) project.title = title;
     if (description) project.description = description;
-    if (inspiration) project.inspiration = inspiration;
-    if (journey) project.journey = journey;
-    if (challenges) project.challenges = challenges;
-    if (futurePlans) project.futurePlans = futurePlans;
+    if (inspiration !== undefined)
+  project.inspiration = inspiration;
+
+if (journey !== undefined)
+  project.journey = journey;
+
+if (challenges !== undefined)
+  project.challenges = challenges;
+
+if (futurePlans !== undefined)
+  project.futurePlans = futurePlans;
 
     if (techStack) project.techStack = techStack;
     if (githubLink) project.githubLink = githubLink;

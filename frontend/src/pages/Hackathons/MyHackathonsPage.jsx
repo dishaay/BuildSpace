@@ -31,7 +31,7 @@ export default function MyHackathonsPage() {
       setLoading(true);
       setError("");
       try {
-        const token = localStorage.getItem("accessToken");
+        const token = localStorage.getItem("token");
         // Axios placeholder — swap for the real endpoint once it's live.
         const res = await axios.get("/api/hackathons/mine", {
           headers: { Authorization: `Bearer ${token}` },

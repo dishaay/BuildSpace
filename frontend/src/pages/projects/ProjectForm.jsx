@@ -55,7 +55,7 @@ export default function EditProject() {
       setLoading(true);
       setLoadError("");
       try {
-        const token = localStorage.getItem("accessToken");
+        const token = localStorage.getItem("token");
         const res = await axios.get(`/api/projects/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -123,7 +123,7 @@ export default function EditProject() {
     setSubmitting(true);
 
     try {
-      const token = localStorage.getItem("accessToken");
+      const token = localStorage.getItem("token");
 
       const payload = {
   title: form.title,

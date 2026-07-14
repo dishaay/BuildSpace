@@ -27,7 +27,7 @@ export default function ProjectDetails() {
       setLoading(true);
       setError("");
       try {
-        const token = localStorage.getItem("accessToken");
+        const token = localStorage.getItem("token");
         const res = await axios.get(`/api/projects/${id}`, {
           headers: token ? { Authorization: `Bearer ${token}` } : {},
         });

@@ -30,7 +30,7 @@ export default function JoinRequestsPage() {
       setLoading(true);
       setError("");
       try {
-        const token = localStorage.getItem("accessToken");
+        const token = localStorage.getItem("token");
         // Axios placeholder — swap for the real endpoint once it's live.
         const res = await axios.get(`/api/hackathons/${id}/join-requests`, {
           headers: { Authorization: `Bearer ${token}` },
@@ -58,7 +58,7 @@ export default function JoinRequestsPage() {
   async function updateStatus(requestId, status) {
     setUpdatingId(requestId);
     try {
-      const token = localStorage.getItem("accessToken");
+      const token = localStorage.getItem("token");
       // Axios placeholder — swap for the real endpoint once it's live.
       await axios.patch(
         `/api/join-requests/${requestId}`,

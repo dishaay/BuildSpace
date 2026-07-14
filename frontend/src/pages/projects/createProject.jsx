@@ -26,14 +26,19 @@ export default function CreateProject() {
   const navigate = useNavigate();
 
   const [form, setForm] = useState({
-    title: "",
-    description: "",
-    techStack: "",
-    githubLink: "",
-    liveLink: "",
-    tags: "",
-    status: "In Progress",
-  });
+  title: "",
+  description: "",
+  inspiration: "",
+  journey: "",
+  challenges: "",
+  futurePlans: "",
+  techStack: "",
+  githubLink: "",
+  liveLink: "",
+  tags: "",
+  status: "In Progress",
+  screenshots: "",
+});
   const [thumbnail, setThumbnail] = useState(null);
   const [thumbnailPreview, setThumbnailPreview] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -76,6 +81,11 @@ export default function CreateProject() {
         liveLink: form.liveLink,
         tags: toList(form.tags),
         status: form.status,
+        inspiration: form.inspiration,
+        journey: form.journey,
+        challenges: form.challenges,
+        futurePlans: form.futurePlans,
+         screenshots: toList(form.screenshots),
         // Note: thumbnail upload is UI-only here — wire this to real file
         // upload (e.g. multipart/form-data or a signed URL) when the
         // backend supports it.
@@ -137,6 +147,58 @@ await createProject(payload);
             />
           </Field>
 
+<Field label="What inspired this project?">
+  <textarea
+    rows={3}
+    value={form.inspiration}
+    onChange={(e) => updateField("inspiration", e.target.value)}
+    placeholder="What made you build this project?"
+    className={`${inputClass} resize-none`}
+  />
+</Field>
+
+<Field label="Development Journey">
+  <textarea
+    rows={4}
+    value={form.journey}
+    onChange={(e) => updateField("journey", e.target.value)}
+    placeholder="Tell the story of how you built it..."
+    className={`${inputClass} resize-none`}
+  />
+</Field>
+
+<Field label="Challenges Faced">
+  <textarea
+    rows={3}
+    value={form.challenges}
+    onChange={(e) => updateField("challenges", e.target.value)}
+    placeholder="What problems did you overcome?"
+    className={`${inputClass} resize-none`}
+  />
+</Field>
+
+<Field label="Future Improvements">
+  <textarea
+    rows={3}
+    value={form.futurePlans}
+    onChange={(e) => updateField("futurePlans", e.target.value)}
+    placeholder="What would you add next?"
+    className={`${inputClass} resize-none`}
+  />
+</Field>
+
+<Field
+  label="Project Screenshots"
+  hint="Paste image URLs separated by commas"
+>
+  <textarea
+    rows={4}
+    value={form.screenshots}
+    onChange={(e) => updateField("screenshots", e.target.value)}
+    placeholder={`https://image1.png,\nhttps://image2.png`}
+    className={`${inputClass} resize-none`}
+  />
+</Field>
           <Field label="Tech stack" hint="Comma separated, e.g. React, Node.js, MongoDB">
             <input
               type="text"
@@ -212,7 +274,15 @@ await createProject(payload);
               ))}
             </select>
           </Field>
-
+              <Field label="Screenshots">
+  <textarea
+    rows={4}
+    value={form.screenshots}
+    onChange={(e) => updateField("screenshots", e.target.value)}
+    placeholder="Paste image URLs separated by commas"
+    className={`${inputClass} resize-none`}
+  />
+</Field>
           <Field label="Thumbnail">
             {thumbnailPreview ? (
               <div className="relative w-full h-40 rounded-lg overflow-hidden border border-border">

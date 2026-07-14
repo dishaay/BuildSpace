@@ -1,3 +1,4 @@
+import DeleteProjectModal from "./projects/DeleteProjectModal";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Plus, SlidersHorizontal } from "lucide-react";
@@ -6,6 +7,7 @@ import ProjectCard from "../components/feature/ProjectCard";
 import Button from "../components/common/Button";
 import Tag from "../components/common/Tag";
 import { getProjects } from "../services/projectService";
+
 
 const filters = [
   "all",
@@ -19,7 +21,8 @@ export default function ProjectShowcasePage() {
   const [projects, setProjects] = useState([]);
   const [active, setActive] = useState("all");
   const [loading, setLoading] = useState(true);
-
+  const [showDelete, setShowDelete] = useState(false);
+const [selectedProject, setSelectedProject] = useState(null);
   useEffect(() => {
     fetchProjects();
   }, []);
@@ -87,9 +90,13 @@ export default function ProjectShowcasePage() {
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredProjects.map((project) => (
             <ProjectCard
-              key={project._id}
-              project={project}
-            />
+  key={project._id}
+  project={project}
+  onDelete={() => {
+    setSelectedProject(project);
+    setShowDelete(true);
+  }}
+/>
           ))}
 
           {filteredProjects.length === 0 && (
@@ -99,6 +106,19 @@ export default function ProjectShowcasePage() {
           )}
         </div>
       )}
+
+      <DeleteProjectModal
+  isOpen={showDelete}
+  projectId={selectedProject?._id}
+  projectTitle={selectedProject?.title}
+  onClose={() => {
+    setShowDelete(false);
+    setSelectedProject(null);
+  }}
+  onDeleted={(id) => {
+    setProjects((prev) => prev.filter((p) => p._id !== id));
+  }}
+/>
     </AppShell>
   );
 }

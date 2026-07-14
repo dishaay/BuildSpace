@@ -1,7 +1,11 @@
 import { useEffect, useState } from "react";
-import { ImagePlus, Github, Link2, X, Loader2 } from "lucide-react";
-import Button from "../common/Button";
-import Tag from "../common/Tag";
+import { useNavigate, useParams } from "react-router-dom";
+import axios from "axios";
+import { ImagePlus, Link2, X, Loader2 } from "lucide-react";
+import AppShell from "../../components/layout/AppShell";
+import Button from "../../components/common/Button";
+import Tag from "../../components/common/Tag";
+import GithubMark from "../../components/common/GithubMark";
 
 const statusOptions = ["In Progress", "Completed"];
 
@@ -18,78 +22,77 @@ function Field({ label, children, hint }) {
   );
 }
 
-function toCommaString(value) {
-  return Array.isArray(value) ? value.join(", ") : value || "";
-}
-
-function toList(value) {
-  return value
-    .split(",")
-    .map((item) => item.trim())
-    .filter(Boolean);
-}
-
 const emptyForm = {
   title: "",
   description: "",
+  inspiration: "",
+  journey: "",
+  challenges: "",
+  futurePlans: "",
   techStack: "",
   githubLink: "",
   liveLink: "",
   tags: "",
   status: "In Progress",
 };
+export default function EditProject() {
+  const { id } = useParams();
+  const navigate = useNavigate();
 
-/**
- * Reusable project form used by both CreateProject and EditProject.
- *
- * Props:
- * - initialData?: { title, description, techStack, githubLink, liveLink,
- *     tags, status, thumbnail } — techStack/tags accept either an array
- *     or a comma-separated string. Omit for a blank "create" form.
- * - onSubmit: (payload, thumbnailFile) => void — called on submit with
- *     the cleaned payload (techStack/tags as arrays) and the raw
- *     thumbnail File if a new one was picked (otherwise null).
- * - loading?: boolean — disables inputs/buttons and flips the submit
- *     button into a "working" state. Caller owns the actual request.
- * - error?: string — optional inline error banner (e.g. from a failed submit)
- * - submitLabel?: string — text for the submit button (default "Save project")
- * - loadingLabel?: string — text for the submit button while loading
- * - onCancel?: () => void — called when Cancel is clicked
- */
-export default function ProjectForm({
-  initialData,
-  onSubmit,
-  loading = false,
-  error = "",
-  submitLabel = "Save project",
-  loadingLabel = "Saving...",
-  onCancel,
-}) {
   const [form, setForm] = useState(emptyForm);
-  const [thumbnailFile, setThumbnailFile] = useState(null);
+  const [thumbnail, setThumbnail] = useState(null);
   const [thumbnailPreview, setThumbnailPreview] = useState("");
 
-  // Prefill (or reset) whenever initialData changes — covers the case
-  // where EditProject fetches the project after this form has mounted.
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
+
   useEffect(() => {
-    if (!initialData) {
-      setForm(emptyForm);
-      setThumbnailPreview("");
-      return;
+    let ignore = false;
+
+    async function fetchProject() {
+      setLoading(true);
+      setLoadError("");
+      try {
+        const token = localStorage.getItem("accessToken");
+        const res = await axios.get(`/api/projects/${id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        const project = res.data?.data || res.data;
+        if (ignore || !project) return;
+
+        setForm({
+  title: project.title || "",
+  description: project.description || "",
+  inspiration: project.inspiration || "",
+  journey: project.journey || "",
+  challenges: project.challenges || "",
+  futurePlans: project.futurePlans || "",
+  techStack: (project.techStack || []).join(", "),
+  githubLink: project.githubLink || "",
+  liveLink: project.liveLink || "",
+  tags: (project.tags || []).join(", "),
+  status: project.status || "In Progress",
+});
+        setThumbnailPreview(project.thumbnail || "");
+      } catch (err) {
+        if (!ignore) {
+          setLoadError(
+            err.response?.data?.message || "Couldn't load this project. It may not exist."
+          );
+        }
+      } finally {
+        if (!ignore) setLoading(false);
+      }
     }
 
-    setForm({
-      title: initialData.title || "",
-      description: initialData.description || "",
-      techStack: toCommaString(initialData.techStack),
-      githubLink: initialData.githubLink || "",
-      liveLink: initialData.liveLink || "",
-      tags: toCommaString(initialData.tags),
-      status: initialData.status || "In Progress",
-    });
-    setThumbnailPreview(initialData.thumbnail || "");
-    setThumbnailFile(null);
-  }, [initialData]);
+    fetchProject();
+    return () => {
+      ignore = true;
+    };
+  }, [id]);
 
   function updateField(key, value) {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -98,196 +101,281 @@ export default function ProjectForm({
   function handleThumbnailChange(e) {
     const file = e.target.files?.[0];
     if (!file) return;
-    setThumbnailFile(file);
+    setThumbnail(file);
     setThumbnailPreview(URL.createObjectURL(file));
   }
 
   function removeThumbnail() {
-    setThumbnailFile(null);
+    setThumbnail(null);
     setThumbnailPreview("");
   }
 
-  function handleSubmit(e) {
+  function toList(value) {
+    return value
+      .split(",")
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+
+  async function handleSubmit(e) {
     e.preventDefault();
+    setSubmitError("");
+    setSubmitting(true);
 
-    const payload = {
-      title: form.title,
-      description: form.description,
-      techStack: toList(form.techStack),
-      githubLink: form.githubLink,
-      liveLink: form.liveLink,
-      tags: toList(form.tags),
-      status: form.status,
-      // Preserve the existing thumbnail URL unless a new file was picked —
-      // useful for EditProject where nothing changed about the image.
-      thumbnail: thumbnailFile ? "" : thumbnailPreview,
-    };
+    try {
+      const token = localStorage.getItem("accessToken");
 
-    onSubmit?.(payload, thumbnailFile);
+      const payload = {
+  title: form.title,
+  description: form.description,
+  inspiration: form.inspiration,
+  journey: form.journey,
+  challenges: form.challenges,
+  futurePlans: form.futurePlans,
+  techStack: toList(form.techStack),
+  githubLink: form.githubLink,
+  liveLink: form.liveLink,
+  tags: toList(form.tags),
+  status: form.status,
+};
+
+      await axios.put(`/api/projects/${id}`, payload, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      navigate(`/projects`);
+    } catch (err) {
+      setSubmitError(
+        err.response?.data?.message || "Something went wrong while saving your changes."
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  if (loading) {
+    return (
+      <AppShell>
+        <div className="max-w-2xl mx-auto flex items-center justify-center py-24">
+          <div className="flex items-center gap-2.5 text-ink-muted text-sm">
+            <Loader2 size={16} className="animate-spin" />
+            Loading project...
+          </div>
+        </div>
+      </AppShell>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <AppShell>
+        <div className="max-w-2xl mx-auto">
+          <div className="bg-accent-coral/10 border border-accent-coral/30 text-accent-coral text-sm rounded-lg px-4 py-3 mb-4">
+            {loadError}
+          </div>
+          <Button variant="secondary" onClick={() => navigate("/projects")}>
+            Back to showcase
+          </Button>
+        </div>
+      </AppShell>
+    );
   }
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="bg-bg-surface border border-border rounded-xl p-5 sm:p-6 flex flex-col gap-5"
-    >
-      {error && (
-        <div className="bg-accent-coral/10 border border-accent-coral/30 text-accent-coral text-sm rounded-lg px-3.5 py-2.5">
-          {error}
+    <AppShell>
+      <div className="max-w-2xl mx-auto">
+        <div className="mb-6">
+          <h1 className="font-display font-semibold text-2xl mb-1">Edit project</h1>
+          <p className="text-ink-muted text-sm">Update your project's details below.</p>
         </div>
-      )}
 
-      <Field label="Project title">
-        <input
-          type="text"
-          required
-          maxLength={60}
-          value={form.title}
-          onChange={(e) => updateField("title", e.target.value)}
-          placeholder="e.g. queue-lite"
-          disabled={loading}
-          className={inputClass}
-        />
-      </Field>
-
-      <Field label="Description">
-        <textarea
-          required
-          rows={5}
-          maxLength={2000}
-          value={form.description}
-          onChange={(e) => updateField("description", e.target.value)}
-          placeholder="What does it do? What problem does it solve? What did you learn building it?"
-          disabled={loading}
-          className={`${inputClass} resize-none`}
-        />
-      </Field>
-
-      <Field label="Tech stack" hint="Comma separated, e.g. React, Node.js, MongoDB">
-        <input
-          type="text"
-          value={form.techStack}
-          onChange={(e) => updateField("techStack", e.target.value)}
-          placeholder="React, Node.js, MongoDB"
-          disabled={loading}
-          className={inputClass}
-        />
-        {form.techStack.trim() && (
-          <div className="flex flex-wrap gap-2 mt-2.5">
-            {toList(form.techStack).map((t) => (
-              <Tag key={t}>{t}</Tag>
-            ))}
-          </div>
-        )}
-      </Field>
-
-      <div className="grid sm:grid-cols-2 gap-4">
-        <Field label="GitHub link">
-          <div className="relative">
-            <Github size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-faint" />
-            <input
-              type="url"
-              value={form.githubLink}
-              onChange={(e) => updateField("githubLink", e.target.value)}
-              placeholder="https://github.com/you/project"
-              disabled={loading}
-              className={`${inputClass} pl-9`}
-            />
-          </div>
-        </Field>
-
-        <Field label="Live link">
-          <div className="relative">
-            <Link2 size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-faint" />
-            <input
-              type="url"
-              value={form.liveLink}
-              onChange={(e) => updateField("liveLink", e.target.value)}
-              placeholder="https://your-project.dev"
-              disabled={loading}
-              className={`${inputClass} pl-9`}
-            />
-          </div>
-        </Field>
-      </div>
-
-      <Field label="Tags" hint="Comma separated, e.g. hackathon, ai, open-source">
-        <input
-          type="text"
-          value={form.tags}
-          onChange={(e) => updateField("tags", e.target.value)}
-          placeholder="hackathon, ai, open-source"
-          disabled={loading}
-          className={inputClass}
-        />
-        {form.tags.trim() && (
-          <div className="flex flex-wrap gap-2 mt-2.5">
-            {toList(form.tags).map((t) => (
-              <Tag key={t}>{t}</Tag>
-            ))}
-          </div>
-        )}
-      </Field>
-
-      <Field label="Status">
-        <select
-          value={form.status}
-          onChange={(e) => updateField("status", e.target.value)}
-          disabled={loading}
-          className={`${inputClass} appearance-none cursor-pointer`}
+        <form
+          onSubmit={handleSubmit}
+          className="bg-bg-surface border border-border rounded-xl p-5 sm:p-6 flex flex-col gap-5"
         >
-          {statusOptions.map((opt) => (
-            <option key={opt} value={opt} className="bg-bg-surface">
-              {opt}
-            </option>
-          ))}
-        </select>
-      </Field>
+          {submitError && (
+            <div className="bg-accent-coral/10 border border-accent-coral/30 text-accent-coral text-sm rounded-lg px-3.5 py-2.5">
+              {submitError}
+            </div>
+          )}
 
-      <Field label="Thumbnail">
-        {thumbnailPreview ? (
-          <div className="relative w-full h-40 rounded-lg overflow-hidden border border-border">
-            <img src={thumbnailPreview} alt="Thumbnail preview" className="w-full h-full object-cover" />
-            {!loading && (
-              <button
-                type="button"
-                onClick={removeThumbnail}
-                className="absolute top-2 right-2 p-1.5 rounded-lg bg-bg/80 text-ink hover:bg-bg-hover"
-              >
-                <X size={14} />
-              </button>
-            )}
-          </div>
-        ) : (
-          <label
-            className={`flex flex-col items-center justify-center gap-2 w-full h-40 rounded-lg border border-dashed border-border transition-colors text-ink-faint ${
-              loading ? "cursor-not-allowed opacity-60" : "hover:border-accent-violet/40 cursor-pointer"
-            }`}
-          >
-            <ImagePlus size={22} />
-            <span className="text-sm">Click to upload a thumbnail</span>
-            <span className="text-xs font-mono">PNG, JPG up to 5MB</span>
+          <Field label="Project title">
             <input
-              type="file"
-              accept="image/*"
-              onChange={handleThumbnailChange}
-              disabled={loading}
-              className="hidden"
+              type="text"
+              required
+              maxLength={60}
+              value={form.title}
+              onChange={(e) => updateField("title", e.target.value)}
+              placeholder="e.g. queue-lite"
+              className={inputClass}
             />
-          </label>
-        )}
-      </Field>
+          </Field>
 
-      <div className="flex items-center gap-3 pt-2 border-t border-border-soft">
-        <Button type="submit" disabled={loading} icon={loading ? Loader2 : undefined}>
-          {loading ? loadingLabel : submitLabel}
-        </Button>
-        {onCancel && (
-          <Button type="button" variant="secondary" onClick={onCancel} disabled={loading}>
-            Cancel
-          </Button>
-        )}
+          <Field label="Description">
+            <textarea
+              required
+              rows={5}
+              maxLength={2000}
+              value={form.description}
+              onChange={(e) => updateField("description", e.target.value)}
+              placeholder="What does it do? What problem does it solve? What did you learn building it?"
+              className={`${inputClass} resize-none`}
+            />
+          </Field>
+
+          <Field label="What inspired this project?">
+  <textarea
+    rows={3}
+    value={form.inspiration}
+    onChange={(e) => updateField("inspiration", e.target.value)}
+    placeholder="What made you build this project?"
+    className={`${inputClass} resize-none`}
+  />
+</Field>
+
+<Field label="Development Journey">
+  <textarea
+    rows={4}
+    value={form.journey}
+    onChange={(e) => updateField("journey", e.target.value)}
+    placeholder="Tell the story of how you built it..."
+    className={`${inputClass} resize-none`}
+  />
+</Field>
+
+<Field label="Challenges Faced">
+  <textarea
+    rows={3}
+    value={form.challenges}
+    onChange={(e) => updateField("challenges", e.target.value)}
+    placeholder="What problems did you overcome?"
+    className={`${inputClass} resize-none`}
+  />
+</Field>
+
+<Field label="Future Improvements">
+  <textarea
+    rows={3}
+    value={form.futurePlans}
+    onChange={(e) => updateField("futurePlans", e.target.value)}
+    placeholder="What would you add next?"
+    className={`${inputClass} resize-none`}
+  />
+</Field>
+
+          <Field label="Tech stack" hint="Comma separated, e.g. React, Node.js, MongoDB">
+            <input
+              type="text"
+              value={form.techStack}
+              onChange={(e) => updateField("techStack", e.target.value)}
+              placeholder="React, Node.js, MongoDB"
+              className={inputClass}
+            />
+            {form.techStack.trim() && (
+              <div className="flex flex-wrap gap-2 mt-2.5">
+                {toList(form.techStack).map((t) => (
+                  <Tag key={t}>{t}</Tag>
+                ))}
+              </div>
+            )}
+          </Field>
+
+          <div className="grid sm:grid-cols-2 gap-4">
+            <Field label="GitHub link">
+              <div className="relative">
+                <Github size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-faint" />
+                <input
+                  type="url"
+                  value={form.githubLink}
+                  onChange={(e) => updateField("githubLink", e.target.value)}
+                  placeholder="https://github.com/you/project"
+                  className={`${inputClass} pl-9`}
+                />
+              </div>
+            </Field>
+
+            <Field label="Live link">
+              <div className="relative">
+                <Link2 size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-faint" />
+                <input
+                  type="url"
+                  value={form.liveLink}
+                  onChange={(e) => updateField("liveLink", e.target.value)}
+                  placeholder="https://your-project.dev"
+                  className={`${inputClass} pl-9`}
+                />
+              </div>
+            </Field>
+          </div>
+          
+
+          <Field label="Tags" hint="Comma separated, e.g. hackathon, ai, open-source">
+            <input
+              type="text"
+              value={form.tags}
+              onChange={(e) => updateField("tags", e.target.value)}
+              placeholder="hackathon, ai, open-source"
+              className={inputClass}
+            />
+            {form.tags.trim() && (
+              <div className="flex flex-wrap gap-2 mt-2.5">
+                {toList(form.tags).map((t) => (
+                  <Tag key={t}>{t}</Tag>
+                ))}
+              </div>
+            )}
+          </Field>
+
+          <Field label="Status">
+            <select
+              value={form.status}
+              onChange={(e) => updateField("status", e.target.value)}
+              className={`${inputClass} appearance-none cursor-pointer`}
+            >
+              {statusOptions.map((opt) => (
+                <option key={opt} value={opt} className="bg-bg-surface">
+                  {opt}
+                </option>
+              ))}
+            </select>
+          </Field>
+
+          <Field label="Thumbnail">
+            {thumbnailPreview ? (
+              <div className="relative w-full h-40 rounded-lg overflow-hidden border border-border">
+                <img
+                  src={thumbnailPreview}
+                  alt="Thumbnail preview"
+                  className="w-full h-full object-cover"
+                />
+                <button
+                  type="button"
+                  onClick={removeThumbnail}
+                  className="absolute top-2 right-2 p-1.5 rounded-lg bg-bg/80 text-ink hover:bg-bg-hover"
+                >
+                  <X size={14} />
+                </button>
+              </div>
+            ) : (
+              <label className="flex flex-col items-center justify-center gap-2 w-full h-40 rounded-lg border border-dashed border-border hover:border-accent-violet/40 cursor-pointer transition-colors text-ink-faint">
+                <ImagePlus size={22} />
+                <span className="text-sm">Click to upload a thumbnail</span>
+                <span className="text-xs font-mono">PNG, JPG up to 5MB</span>
+                <input type="file" accept="image/*" onChange={handleThumbnailChange} className="hidden" />
+              </label>
+            )}
+          </Field>
+
+          <div className="flex items-center gap-3 pt-2 border-t border-border-soft">
+            <Button type="submit" disabled={submitting} icon={submitting ? Loader2 : undefined}>
+              {submitting ? "Saving..." : "Save changes"}
+            </Button>
+            <Button type="button" variant="secondary" onClick={() => navigate(-1)} disabled={submitting}>
+              Cancel
+            </Button>
+          </div>
+        </form>
       </div>
-    </form>
+    </AppShell>
   );
 }

@@ -3,7 +3,20 @@ const Project = require("../models/Project");
 const createProject = async (req,res) => {
     try {
 
-    const {title,description,techStack,githubLink,liveLink,thumbnail,tags,status} = req.body;
+const {
+    title,
+    description,
+    inspiration,
+    journey,
+    challenges,
+    futurePlans,
+    techStack,
+    githubLink,
+    liveLink,
+    tags,
+    status,
+    screenshots
+} = req.body;
 
     if (!title || !description) {
     return res.status(400).json({
@@ -14,11 +27,16 @@ const createProject = async (req,res) => {
   const project = new Project({
     title,
     description,
+    inspiration,
+    journey,
+    challenges,
+    futurePlans,
     techStack,
     githubLink,
     liveLink,
     tags,
     status,
+    screenshots,
     createdBy:req.user._id
 });
 
@@ -85,7 +103,8 @@ const getProjectById = async (req, res) => {
       message: "Server Error",
     });
   }
-};const updateProject = async (req, res) => {
+};
+const updateProject = async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -108,22 +127,33 @@ const getProjectById = async (req, res) => {
     const {
       title,
       description,
+      inspiration,
+      journey,
+      challenges,
+      futurePlans,
       techStack,
       githubLink,
       liveLink,
       thumbnail,
       tags,
       status,
+      screenshots,
     } = req.body;
 
     if (title) project.title = title;
     if (description) project.description = description;
+    if (inspiration) project.inspiration = inspiration;
+    if (journey) project.journey = journey;
+    if (challenges) project.challenges = challenges;
+    if (futurePlans) project.futurePlans = futurePlans;
+
     if (techStack) project.techStack = techStack;
     if (githubLink) project.githubLink = githubLink;
     if (liveLink) project.liveLink = liveLink;
     if (thumbnail) project.thumbnail = thumbnail;
     if (tags) project.tags = tags;
     if (status) project.status = status;
+    if (screenshots) project.screenshots = screenshots;
 
     await project.save();
 
@@ -141,7 +171,6 @@ const getProjectById = async (req, res) => {
     });
   }
 };
-
 
 const deleteProject = async (req, res) => {
   try {

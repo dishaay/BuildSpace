@@ -1,28 +1,15 @@
 import { useState } from "react";
-import axios from "axios";
 import { AlertTriangle, Loader2 } from "lucide-react";
-import Button from "./Button";
+import Button from "../../components/common/Button";
+import { deleteProject } from "../../services/projectService";
 
-/**
- * Reusable confirmation modal for deleting a project.
- *
- * Props:
- * - isOpen: boolean — controls visibility
- * - projectId: string — id passed to DELETE /api/projects/:id
- * - projectTitle: string — shown in the confirmation copy
- * - onClose: () => void — called on cancel / backdrop click / after error dismiss
- * - onDeleted: (projectId: string) => void — called after a successful delete
- *
- * Usage:
- * <DeleteProjectModal
- *   isOpen={showModal}
- *   projectId={project.id}
- *   projectTitle={project.title}
- *   onClose={() => setShowModal(false)}
- *   onDeleted={(id) => setProjects((prev) => prev.filter((p) => p.id !== id))}
- * />
- */
-export default function DeleteProjectModal({ isOpen, projectId, projectTitle, onClose, onDeleted }) {
+export default function DeleteProjectModal({
+  isOpen,
+  projectId,
+  projectTitle,
+  onClose,
+  onDeleted,
+}) {
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState("");
 
@@ -33,15 +20,15 @@ export default function DeleteProjectModal({ isOpen, projectId, projectTitle, on
     setError("");
 
     try {
-      const token = localStorage.getItem("accessToken");
-      await axios.delete(`/api/projects/${projectId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await deleteProject(projectId);
 
-      onDeleted?.(projectId);
-      onClose?.();
+      onDeleted(projectId);
+      onClose();
     } catch (err) {
-      setError(err.response?.data?.message || "Couldn't delete this project. Try again.");
+      setError(
+        err.response?.data?.message ||
+          "Couldn't delete this project. Please try again."
+      );
     } finally {
       setDeleting(false);
     }
@@ -49,50 +36,53 @@ export default function DeleteProjectModal({ isOpen, projectId, projectTitle, on
 
   function handleBackdropClick(e) {
     if (e.target === e.currentTarget && !deleting) {
-      onClose?.();
+      onClose();
     }
   }
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-riseIn"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
       onClick={handleBackdropClick}
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="delete-project-title"
     >
-      <div className="w-full max-w-sm bg-bg-surface border border-border rounded-xl p-6 shadow-2xl">
-        <div className="flex items-start gap-3 mb-4">
-          <span className="shrink-0 w-9 h-9 rounded-lg bg-accent-coral/15 border border-accent-coral/30 flex items-center justify-center">
-            <AlertTriangle size={18} className="text-accent-coral" />
-          </span>
-          <div className="min-w-0">
-            <h2 id="delete-project-title" className="font-display font-semibold text-ink text-base">
-              Delete project?
+      <div className="w-full max-w-md bg-bg-surface border border-border rounded-xl p-6">
+        <div className="flex gap-3 mb-4">
+          <div className="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center">
+            <AlertTriangle className="text-red-500" size={20} />
+          </div>
+
+          <div>
+            <h2 className="text-lg font-semibold">
+              Delete Project?
             </h2>
-            <p className="text-sm text-ink-muted mt-1 leading-relaxed">
-              This will permanently delete{" "}
-              <span className="text-ink font-medium">
-                {projectTitle ? `"${projectTitle}"` : "this project"}
+
+            <p className="text-sm text-ink-muted mt-1">
+              Are you sure you want to delete{" "}
+              <span className="font-medium">
+                "{projectTitle}"
               </span>
-              . This action can't be undone.
+              ? This action cannot be undone.
             </p>
           </div>
         </div>
 
         {error && (
-          <div className="bg-accent-coral/10 border border-accent-coral/30 text-accent-coral text-xs rounded-lg px-3 py-2 mb-4">
+          <div className="bg-red-500/10 border border-red-500/20 text-red-400 rounded-lg p-3 mb-4 text-sm">
             {error}
           </div>
         )}
 
-        <div className="flex items-center justify-end gap-2.5">
-          <Button variant="secondary" size="sm" onClick={onClose} disabled={deleting}>
+        <div className="flex justify-end gap-3">
+          <Button
+            variant="secondary"
+            onClick={onClose}
+            disabled={deleting}
+          >
             Cancel
           </Button>
+
           <Button
             variant="danger"
-            size="sm"
             onClick={handleDelete}
             disabled={deleting}
             icon={deleting ? Loader2 : undefined}

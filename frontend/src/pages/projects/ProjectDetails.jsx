@@ -78,20 +78,22 @@ export default function ProjectDetails() {
       </AppShell>
     );
   }
-
-  const {
-    title,
-    description,
-    techStack = [],
-    tags = [],
-    githubLink,
-    liveLink,
-    thumbnail,
-    status,
-    createdBy,
-    stars,
-    forks,
-  } = project;
+const {
+  title,
+  description,
+  inspiration,
+  journey,
+  challenges,
+  futurePlans,
+  screenshots = [],
+  techStack = [],
+  tags = [],
+  githubLink,
+  liveLink,
+  thumbnail,
+  status,
+  createdBy,
+} = project;
 
   return (
     <AppShell>
@@ -175,6 +177,61 @@ export default function ProjectDetails() {
             <p className="text-sm text-ink-muted leading-relaxed whitespace-pre-wrap mb-6">
               {description}
             </p>
+            {inspiration && (
+  <section className="mb-6">
+    <h2 className="font-semibold text-lg mb-2">
+      Inspiration
+    </h2>
+
+    <p className="text-ink-muted whitespace-pre-wrap">
+      {inspiration}
+    </p>
+  </section>
+)}
+{project.inspiration && (
+  <div className="mb-8">
+    <h2 className="text-lg font-semibold mb-2">
+      Inspiration
+    </h2>
+
+    <p className="text-ink-muted whitespace-pre-wrap">
+      {project.inspiration}
+    </p>
+  </div>
+)}
+{project.journey && (
+  <div className="mb-8">
+    <h2 className="text-lg font-semibold mb-2">
+      Development Journey
+    </h2>
+
+    <p className="text-ink-muted whitespace-pre-wrap">
+      {project.journey}
+    </p>
+  </div>
+)}
+{project.challenges && (
+  <div className="mb-8">
+    <h2 className="text-lg font-semibold mb-2">
+      Challenges Faced
+    </h2>
+
+    <p className="text-ink-muted whitespace-pre-wrap">
+      {project.challenges}
+    </p>
+  </div>
+)}
+{project.futurePlans && (
+  <div className="mb-8">
+    <h2 className="text-lg font-semibold mb-2">
+      Future Improvements
+    </h2>
+
+    <p className="text-ink-muted whitespace-pre-wrap">
+      {project.futurePlans}
+    </p>
+  </div>
+)}
 
             {/* Tech stack */}
             {techStack.length > 0 && (
@@ -190,6 +247,24 @@ export default function ProjectDetails() {
               </div>
             )}
 
+{project.screenshots?.length > 0 && (
+  <div className="mb-8">
+    <h2 className="font-display text-lg font-semibold mb-4">
+      Screenshots
+    </h2>
+
+    <div className="grid md:grid-cols-2 gap-4">
+      {project.screenshots.map((image, index) => (
+        <img
+          key={index}
+          src={image}
+          alt={`Screenshot ${index + 1}`}
+          className="rounded-xl border border-border object-cover"
+        />
+      ))}
+    </div>
+  </div>
+)}
             {/* Tags */}
             {tags.length > 0 && (
               <div className="mb-6">
@@ -225,6 +300,25 @@ export default function ProjectDetails() {
           </div>
         </div>
       </div>
+      <div className="border-t border-border pt-6 mt-6">
+
+<div className="flex items-center gap-8 mb-6">
+
+<button className="flex items-center gap-2 hover:text-accent-violet">
+<Heart />
+{project.likes?.length || 0}
+</button>
+
+<button className="flex items-center gap-2 hover:text-accent-violet">
+<MessageCircle />
+{project.comments?.length || 0}
+</button>
+
+</div>
+
+<CommentSection />
+
+</div>
     </AppShell>
   );
 }

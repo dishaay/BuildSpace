@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
-import { ImagePlus, Github, Link2, X, Loader2 } from "lucide-react";
-import AppShell from "../components/layout/AppShell";
-import Button from "../components/common/Button";
-import Tag from "../components/common/Tag";
+import { ImagePlus, Link2, X, Loader2 } from "lucide-react";
+import AppShell from "../../components/layout/AppShell";
+import Button from "../../components/common/Button";
+import Tag from "../../components/common/Tag";
+import GithubMark from "../../components/common/GithubMark";
 
 const statusOptions = ["In Progress", "Completed"];
 
@@ -24,13 +25,17 @@ function Field({ label, children, hint }) {
 const emptyForm = {
   title: "",
   description: "",
+  inspiration: "",
+  journey: "",
+  challenges: "",
+  futurePlans: "",
   techStack: "",
   githubLink: "",
   liveLink: "",
   tags: "",
   status: "In Progress",
+  screenshots: ""
 };
-
 export default function EditProject() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -56,18 +61,23 @@ export default function EditProject() {
           headers: { Authorization: `Bearer ${token}` },
         });
 
-        const project = res.data?.data || res.data;
+      const project = res.data.project;
+      console.log(project)
         if (ignore || !project) return;
 
         setForm({
-          title: project.title || "",
-          description: project.description || "",
-          techStack: (project.techStack || []).join(", "),
-          githubLink: project.githubLink || "",
-          liveLink: project.liveLink || "",
-          tags: (project.tags || []).join(", "),
-          status: project.status || "In Progress",
-        });
+  title: project.title || "",
+  description: project.description || "",
+  inspiration: project.inspiration || "",
+  journey: project.journey || "",
+  challenges: project.challenges || "",
+  futurePlans: project.futurePlans || "",
+  techStack: (project.techStack || []).join(", "),
+  githubLink: project.githubLink || "",
+  liveLink: project.liveLink || "",
+  tags: (project.tags || []).join(", "),
+  status: project.status || "In Progress",
+});
         setThumbnailPreview(project.thumbnail || "");
       } catch (err) {
         if (!ignore) {
@@ -118,18 +128,19 @@ export default function EditProject() {
       const token = localStorage.getItem("accessToken");
 
       const payload = {
-        title: form.title,
-        description: form.description,
-        techStack: toList(form.techStack),
-        githubLink: form.githubLink,
-        liveLink: form.liveLink,
-        tags: toList(form.tags),
-        status: form.status,
-        // Note: thumbnail upload is UI-only here — wire this to real file
-        // upload (e.g. multipart/form-data or a signed URL) when the
-        // backend supports it. The existing thumbnail URL is preserved
-        // unless a new file has been selected.
-      };
+  title: form.title,
+  description: form.description,
+  inspiration: form.inspiration,
+  journey: form.journey,
+  challenges: form.challenges,
+  futurePlans: form.futurePlans,
+  techStack: toList(form.techStack),
+  githubLink: form.githubLink,
+  liveLink: form.liveLink,
+  tags: toList(form.tags),
+  status: form.status,
+  screenshots: toList(form.screenshots),
+};
 
       await axios.put(`/api/projects/${id}`, payload, {
         headers: { Authorization: `Bearer ${token}` },
@@ -235,7 +246,7 @@ export default function EditProject() {
           <div className="grid sm:grid-cols-2 gap-4">
             <Field label="GitHub link">
               <div className="relative">
-                <Github size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-faint" />
+                <GithubMark size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-faint" />
                 <input
                   type="url"
                   value={form.githubLink}
@@ -259,6 +270,7 @@ export default function EditProject() {
               </div>
             </Field>
           </div>
+          
 
           <Field label="Tags" hint="Comma separated, e.g. hackathon, ai, open-source">
             <input

@@ -16,8 +16,8 @@ const handleSubmit = async (e) => {
   try {
     const response = await login(form);
 
-    localStorage.setItem("token", response.data.token);
-    localStorage.setItem("userId", response.data.user.id);
+   localStorage.setItem("token", response.data.token);
+localStorage.setItem("user", JSON.stringify(response.data.user));
 
     navigate("/feed");
   } catch (err) {

@@ -21,7 +21,7 @@ const handleSubmit = async (e) => {
     const response = await register(form);
 
     localStorage.setItem("token", response.data.token);
-    localStorage.setItem("userId", response.data.user.id);
+    localStorage.setItem("userId", response.data.user._id);
 
     alert("Registration successful!");
 

@@ -29,6 +29,31 @@ const projectSchema = new mongoose.Schema(
       type: [String],
       default: [],
     },
+    journey: {
+    type: String,
+    default: ""
+},
+
+inspiration: {
+    type: String,
+    default: ""
+},
+
+challenges: {
+    type: String,
+    default: ""
+},
+
+futurePlans: {
+    type: String,
+    default: ""
+},
+
+screenshots: [
+  {
+    type: String,
+  },
+],
     status: {
       type: String,
       enum: ["In Progress", "Completed"],

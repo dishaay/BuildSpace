@@ -9,6 +9,7 @@ import Button from "../components/common/Button";
 import ContributionGraph from "../components/common/ContributionGraph";
 import { getProfile } from "../services/userService";
 import { getProjects } from "../services/projectService";
+import { getMyHackathons } from "../services/hackathonService";
 import { getHackathons } from "../services/hackathonService";
 
 const tabs = ["Overview", "Projects", "Hackathons", "Posts", "Activity"];
@@ -50,7 +51,7 @@ export default function DeveloperProfilePage() {
     console.log("PROJECTS RESPONSE:", projectsRes.data);
 
     // Get hackathons
-    const hackathonsRes = await getHackathons();
+    const hackathonsRes = await getMyHackathons();
     console.log("HACKATHONS RESPONSE:", hackathonsRes.data);
 
     const allProjects =
@@ -58,10 +59,9 @@ export default function DeveloperProfilePage() {
       projectsRes.data.data ||
       [];
 
-    const allHackathons =
-      hackathonsRes.data.hackathons ||
-      hackathonsRes.data.data ||
-      [];
+    setMyHackathons(
+    hackathonsRes.data.hackathons || []
+);
 
     if (ignore) return;
 
@@ -72,8 +72,8 @@ export default function DeveloperProfilePage() {
     );
 
     setMyHackathons(
-      allHackathons.filter((h) => getId(h.createdBy) === currentUserId)
-    );
+  hackathonsRes.data.hackathons || hackathonsRes.data
+);
 
   } catch (err) {
     console.error("FULL ERROR:", err);
@@ -112,7 +112,8 @@ export default function DeveloperProfilePage() {
       </AppShell>
     );
   }
-
+  console.log(myHackathons);
+console.log(myHackathons.length);
   const stats = [
     { label: "Projects", value: myProjects.length, icon: FolderGit2 },
     { label: "Hackathons", value: myHackathons.length, icon: Trophy },

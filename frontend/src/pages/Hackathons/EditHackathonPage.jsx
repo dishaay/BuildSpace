@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import axios from "axios";
 import { Link2, Loader2 } from "lucide-react";
+import { getHackathonById, updateHackathon } from "../../services/hackathonService";
 import AppShell from "../../components/layout/AppShell";
 import Card from "../../components/common/Card";
 import Input from "../../components/common/Input";
@@ -57,13 +57,8 @@ export default function EditHackathonPage() {
       setLoading(true);
       setLoadError("");
       try {
-        const token = localStorage.getItem("token");
-        // Axios placeholder — swap for the real endpoint once it's live.
-        const res = await axios.get(`/api/hackathons/${id}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        const h = res.data?.data || res.data;
+        const res = await getHackathonById(id);
+        const h = res.data?.hackathon || res.data?.data || res.data;
         if (ignore || !h) return;
 
         setForm({
@@ -105,8 +100,6 @@ export default function EditHackathonPage() {
     setSubmitting(true);
 
     try {
-      const token = localStorage.getItem("token");
-
       const payload = {
         title: form.title,
         description: form.description,
@@ -122,10 +115,7 @@ export default function EditHackathonPage() {
         status: form.status,
       };
 
-      // Axios placeholder — swap for the real endpoint once it's live.
-      await axios.put(`/api/hackathons/${id}`, payload, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await updateHackathon(id, payload);
 
       navigate(`/hackathons/${id}`);
     } catch (err) {

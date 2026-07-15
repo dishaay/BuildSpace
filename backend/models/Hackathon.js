@@ -36,9 +36,10 @@ const hackathonSchema = new mongoose.Schema(
     },
 
     mode: {
-      type: String,
-      enum: ["Online", "Offline", "Hybrid"],
-    },
+    type:String,
+    enum:["Online","Offline","Hybrid"],
+    default:"Online"
+},
 
     location: {
       type: String,
@@ -63,11 +64,11 @@ const hackathonSchema = new mongoose.Schema(
       default: [],
     },
 
-    status: {
-      type: String,
-      enum: ["Open", "Full", "Closed"],
-      default: "Open",
-    },
+    status:{
+    type:String,
+    enum:["Open","Full","Closed"],
+    default:"Open"
+},
 
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,

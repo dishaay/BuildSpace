@@ -1,7 +1,17 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import axios from "axios";
-import { Github, ExternalLink, Loader2, ArrowLeft, Star, GitFork } from "lucide-react";
+import GithubMark from "../../components/common/GithubMark";
+
+import {
+  ExternalLink,
+  Loader2,
+  ArrowLeft,
+  Star,
+  GitFork,
+  Heart,
+  MessageCircle,
+} from "lucide-react";
 import AppShell from "../../components/layout/AppShell";
 import Avatar from "../../components/common/Avatar";
 import Tag from "../../components/common/Tag";
@@ -31,8 +41,13 @@ export default function ProjectDetails() {
         const res = await axios.get(`/api/projects/${id}`, {
           headers: token ? { Authorization: `Bearer ${token}` } : {},
         });
+        console.log(res.data);
+const data =
+    res.data?.project ||
+    res.data?.data ||
+    res.data;
 
-        const data = res.data?.data || res.data;
+setProject(data);
         if (!ignore) setProject(data);
       } catch (err) {
         if (!ignore) {
@@ -93,6 +108,8 @@ const {
   thumbnail,
   status,
   createdBy,
+  stars,
+  forks,
 } = project;
 
   return (
@@ -187,17 +204,6 @@ const {
       {inspiration}
     </p>
   </section>
-)}
-{project.inspiration && (
-  <div className="mb-8">
-    <h2 className="text-lg font-semibold mb-2">
-      Inspiration
-    </h2>
-
-    <p className="text-ink-muted whitespace-pre-wrap">
-      {project.inspiration}
-    </p>
-  </div>
 )}
 {project.journey && (
   <div className="mb-8">
@@ -316,7 +322,7 @@ const {
 
 </div>
 
-<CommentSection />
+{/* <CommentSection /> */}
 
 </div>
     </AppShell>

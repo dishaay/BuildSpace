@@ -98,13 +98,15 @@ const getJoinRequests = async (req, res) => {
       });
     }
 
-    const requests = await JoinRequest.find({
-      hackathon: hackathonId,
-    }).populate("user", "username avatar bio skills");
-
+    const hackathonWithMembers = await Hackathon.findById(hackathonId)
+      .populate(
+        "members",
+        "username avatar bio skills name github portfolio linkedin"
+      );
+      console.log(hackathonWithMembers.members);
     return res.status(200).json({
       success: true,
-      requests,
+      requests: hackathonWithMembers.members,
     });
 
   } catch (err) {

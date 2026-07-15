@@ -2,7 +2,8 @@ import api from "./api";
 
 export const getHackathons=()=>
     api.get("/hackathons");
-
+export const getMyHackathons = () =>
+    api.get("/hackathons/mine");
 export const createHackathon=(data)=>
     api.post("/hackathons",data);
 
@@ -11,3 +12,8 @@ export const updateHackathon=(id,data)=>
 
 export const deleteHackathon=(id)=>
     api.delete(`/hackathons/${id}`);
+export const getHackathonById=(id)=>
+    api.get(`/hackathons/${id}`);
+
+export const joinHackathon=(id)=>
+    api.post(`/hackathons/${id}/join`);

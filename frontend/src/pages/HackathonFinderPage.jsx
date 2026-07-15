@@ -1,15 +1,32 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Calendar, MapPin, Users, Plus } from "lucide-react";
 import AppShell from "../components/layout/AppShell";
 import TeammateCard from "../components/feature/TeammateCard";
 import Button from "../components/common/Button";
-import { hackathons, teammateCandidates } from "../data/dummyData";
+import { getHackathons } from "../services/hackathonService";
+import { useNavigate } from "react-router-dom";
+const candidates = [];
 
 export default function HackathonFinderPage() {
-  const [activeHackathon, setActiveHackathon] = useState(hackathons[0].id);
+  const navigate = useNavigate();
 
-  const candidates = teammateCandidates.filter((t) => t.hackathon === activeHackathon);
+const [hackathons, setHackathons] = useState([]);
+useEffect(() => {
+    async function fetchHackathons() {
+        const res = await getHackathons();
 
+        setHackathons(res.data.hackathons);
+    }
+
+    fetchHackathons();
+}, []);
+
+  const [activeHackathon, setActiveHackathon] = useState(null);
+  useEffect(() => {
+  if (hackathons.length > 0) {
+    setActiveHackathon(hackathons[0]._id);
+  }
+}, [hackathons]);
   return (
     <AppShell>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
@@ -20,34 +37,59 @@ export default function HackathonFinderPage() {
         <Button icon={Plus}>Post your pitch</Button>
       </div>
 
-      {/* Hackathon selector strip */}
-      <div className="grid sm:grid-cols-3 gap-3 mb-6">
-        {hackathons.map((h) => (
-          <button
-            key={h.id}
-            onClick={() => setActiveHackathon(h.id)}
-            className={`text-left bg-bg-surface border rounded-xl p-4 transition-colors ${
-              activeHackathon === h.id
-                ? "border-accent-violet shadow-glow"
-                : "border-border hover:border-ink-faint/40"
-            }`}
-          >
-            <div className="flex items-center justify-between mb-2">
-              <span className="font-mono text-[11px] px-2 py-0.5 rounded-full bg-accent-coral/15 text-accent-coral border border-accent-coral/30">
-                {h.daysLeft}d left
-              </span>
-            </div>
-            <h3 className="font-display font-semibold text-ink mb-1 leading-snug">{h.name}</h3>
-            <p className="text-xs text-ink-muted mb-3">{h.theme}</p>
-            <div className="flex flex-col gap-1 text-xs text-ink-faint font-mono">
-              <span className="flex items-center gap-1.5"><Calendar size={12} /> {h.date}</span>
-              <span className="flex items-center gap-1.5"><MapPin size={12} /> {h.mode}</span>
-              <span className="flex items-center gap-1.5"><Users size={12} /> {h.participants.toLocaleString()} registered</span>
-            </div>
-          </button>
-        ))}
+{/* Hackathon selector strip */}
+{/* Hackathon selector strip */}
+<div className="grid sm:grid-cols-3 gap-3 mb-6">
+  {hackathons.map((h) => (
+    <div
+      key={h._id}
+      onClick={() => setActiveHackathon(h._id)}
+      className={`text-left bg-bg-surface border rounded-xl p-4 transition-colors cursor-pointer ${
+        activeHackathon === h._id
+          ? "border-accent-violet shadow-glow"
+          : "border-border hover:border-ink-faint/40"
+      }`}
+    >
+      <div className="flex items-center justify-between mb-2">
+        <span className="font-mono text-[11px] px-2 py-0.5 rounded-full bg-accent-coral/15 text-accent-coral border border-accent-coral/30">
+          {h.status}
+        </span>
       </div>
 
+      <h3 className="font-display font-semibold text-ink mb-1 leading-snug">
+        {h.title}
+      </h3>
+
+      <p className="text-xs text-ink-muted mb-3">
+        {h.description}
+      </p>
+
+      <div className="flex flex-col gap-1 text-xs text-ink-faint font-mono">
+        <span className="flex items-center gap-1.5">
+          <Calendar size={12} />
+          {new Date(h.startDate).toLocaleDateString()}
+        </span>
+
+        <span className="flex items-center gap-1.5">
+          <MapPin size={12} />
+          {h.mode}
+        </span>
+
+        <span className="flex items-center gap-1.5">
+          <Users size={12} />
+          {h.members.length} registered
+        </span>
+      </div>
+
+      <Button
+        className="mt-4"
+        onClick={() => navigate(`/hackathons/${h._id}`)}
+      >
+        View Details
+      </Button>
+    </div>
+  ))}
+</div>
       {/* Candidates */}
       <div className="flex items-center justify-between mb-4">
         <p className="text-sm font-medium text-ink">

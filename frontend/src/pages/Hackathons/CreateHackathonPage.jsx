@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 import { Link2, Loader2 } from "lucide-react";
+import { createHackathon } from "../../services/hackathonService";
 import AppShell from "../../components/layout/AppShell";
 import Card from "../../components/common/Card";
 import Input from "../../components/common/Input";
@@ -47,8 +47,6 @@ export default function CreateHackathonPage() {
     setSubmitting(true);
 
     try {
-      const token = localStorage.getItem("token");
-
       const payload = {
         title: form.title,
         description: form.description,
@@ -62,11 +60,8 @@ export default function CreateHackathonPage() {
         prizePool: form.prizePool,
         maxTeamSize: Number(form.maxTeamSize),
       };
-
-      // Axios placeholder — swap for the real endpoint once it's live.
-      await axios.post("/api/hackathons", payload, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      console.log(localStorage.getItem("token"));
+      await createHackathon(payload);
 
       navigate("/hackathons/mine");
     } catch (err) {

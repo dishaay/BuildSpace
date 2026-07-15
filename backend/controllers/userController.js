@@ -1,70 +1,83 @@
-    let getMe= ((req,res)=>{
+const User = require("../models/User");
 
-    try{
-        console.log("===== GET PROFILE CALLED =====");
-  console.log(req.user);
-    return res.status(200).json({
-    success:true,
-    user: req.user})
-    }
+// GET PROFILE
 
-    catch(err){
-        console.log(err);
-        return res.status(500).json({
-        success:false,
-        message:"Server error"
-        })
-    }
-    })// this displays the user info. 
-
-let updateProfile = async (req, res) => {
+const getMe = async (req, res) => {
     try {
-
-        const {
-    username,
-    name,
-    bio,
-    location,
-    github,
-    portfolio,
-    linkedin,
-    college,
-    year,
-    lookingForTeam,
-    skills
-} = req.body;
-
-        if (username !== undefined) req.user.username = username;
-if (name !== undefined) req.user.name = name;
-if (bio !== undefined) req.user.bio = bio;
-if (location !== undefined) req.user.location = location;
-if (github !== undefined) req.user.github = github;
-if (portfolio !== undefined) req.user.portfolio = portfolio;
-if (linkedin !== undefined) req.user.linkedin = linkedin;
-if (college !== undefined) req.user.college = college;
-if (year !== undefined) req.user.year = year;
-if (lookingForTeam !== undefined)
-    req.user.lookingForTeam = lookingForTeam;
-if (skills !== undefined) req.user.skills = skills;
-
-        await req.user.save();
+        const user = await User.findById(req.user._id);
 
         return res.status(200).json({
             success: true,
-            message: "Profile updated successfully",
-            user: req.user
+            user
         });
-
     } catch (err) {
-
         console.log(err);
 
         return res.status(500).json({
             success: false,
             message: "Server Error"
         });
-
     }
 };
 
-module.exports={getMe, updateProfile};
+// UPDATE PROFILE
+const updateProfile = async (req, res) => {
+    try {
+        const user = await User.findById(req.user._id);
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found",
+            });
+        }
+
+        const {
+            username,
+            name,
+            bio,
+            location,
+            github,
+            portfolio,
+            linkedin,
+            college,
+            year,
+            lookingForTeam,
+            skills,
+        } = req.body;
+
+        if (username !== undefined) user.username = username;
+        if (name !== undefined) user.name = name;
+        if (bio !== undefined) user.bio = bio;
+        if (location !== undefined) user.location = location;
+        if (github !== undefined) user.github = github;
+        if (portfolio !== undefined) user.portfolio = portfolio;
+        if (linkedin !== undefined) user.linkedin = linkedin;
+        if (college !== undefined) user.college = college;
+        if (year !== undefined) user.year = year;
+        if (lookingForTeam !== undefined)
+            user.lookingForTeam = lookingForTeam;
+        if (skills !== undefined) user.skills = skills;
+
+        await user.save();
+
+        return res.status(200).json({
+            success: true,
+            message: "Profile updated successfully",
+            user,
+        });
+
+    } catch (err) {
+        console.log(err);
+
+        return res.status(500).json({
+            success: false,
+            message: "Server Error",
+        });
+    }
+};
+
+module.exports = {
+    getMe,
+    updateProfile,
+};

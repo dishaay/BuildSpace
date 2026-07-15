@@ -56,13 +56,85 @@ const createHackathon = async (req, res) => {
   }
 };
 
+//JOIN HACKATHON 
+const joinHackathon = async (req,res)=>{
+    try{
+
+        const {id} = req.params;
+
+        const hackathon = await Hackathon.findById(id);
+
+        if(!hackathon){
+            return res.status(404).json({
+                success:false,
+                message:"Hackathon not found"
+            });
+        }
+
+        if(
+            hackathon.members.includes(req.user._id)
+        ){
+            return res.status(400).json({
+                success:false,
+                message:"Already joined."
+            });
+        }
+
+        hackathon.members.push(req.user._id);
+
+        if(
+            hackathon.members.length >=
+            hackathon.maxTeamSize
+        ){
+            hackathon.status="Full";
+        }
+
+        await hackathon.save();
+
+        return res.status(200).json({
+            success:true,
+            message:"Joined successfully",
+            hackathon
+        });
+
+    }catch(err){
+        console.log(err);
+
+        return res.status(500).json({
+            success:false,
+            message:"Server Error"
+        });
+    }
+}
+
+//GET MY HACKATHONS
+const getMyHackathons = async (req,res)=>{
+    try{
+        const hackathons = await Hackathon.find({
+            createdBy:req.user._id
+        });
+
+        return res.status(200).json({
+            success:true,
+            hackathons
+        });
+
+    }catch(err){
+        console.log(err);
+
+        return res.status(500).json({
+            success:false,
+            message:"Server Error"
+        });
+    }
+};
 // GET ALL HACKATHONS
 const getHackathons = async (req, res) => {
   try {
     const hackathons = await Hackathon.find()
       .populate("createdBy", "username avatar")
       .sort({ createdAt: -1 });
-
+      console.log(hackathons);
     return res.status(200).json({
       success: true,
       message: "Hackathons fetched successfully",
@@ -189,7 +261,9 @@ const deleteHackathon = async (req, res) => {
 module.exports = {
   createHackathon,
   getHackathons,
+  getMyHackathons,
   getHackathonById,
   updateHackathon,
   deleteHackathon,
+  joinHackathon,
 };

@@ -1,6 +1,11 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
-import axios from "axios";
+import { Trash2 } from "lucide-react";
+import {
+    getHackathonById,
+    joinHackathon,
+    deleteHackathon,
+} from "../../services/hackathonService";
 import {
   ExternalLink,
   Calendar,
@@ -11,11 +16,14 @@ import {
   ArrowLeft,
   Pencil,
   ListChecks,
+  Check,
 } from "lucide-react";
+import { getProfile } from "../../services/userService";
 import AppShell from "../../components/layout/AppShell";
 import Card from "../../components/common/Card";
 import Button from "../../components/common/Button";
 import Tag from "../../components/common/Tag";
+
 
 const statusStyles = {
   Open: "bg-accent-teal/15 text-accent-teal border-accent-teal/30",
@@ -30,67 +38,68 @@ function formatDate(value) {
   return d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
 }
 
+function getId(value) {
+  if (!value) return null;
+  return typeof value === "string" ? value : value._id || value.id;
+}
+
 export default function HackathonDetailsPage() {
   const { id } = useParams();
   const navigate = useNavigate();
 
   const [hackathon, setHackathon] = useState(null);
+  const [currentUserId, setCurrentUserId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   const [joining, setJoining] = useState(false);
   const [joinError, setJoinError] = useState("");
-  const [joinMessage, setJoinMessage] = useState("");
-  const [requestSent, setRequestSent] = useState(false);
-
-  // Current user id, used to decide whether to show owner-only actions.
-  const currentUserId = localStorage.getItem("userId");
 
   useEffect(() => {
     let ignore = false;
 
-    async function fetchHackathon() {
+    async function fetchData() {
       setLoading(true);
       setError("");
       try {
-        const token = localStorage.getItem("token");
-        // Axios placeholder — swap for the real endpoint once it's live.
-        const res = await axios.get(`/api/hackathons/${id}`, {
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-        });
+        const [hackathonRes, profileRes] = await Promise.all([getHackathonById(id), getProfile()]);
 
-        const data = res.data?.data || res.data;
-        if (!ignore) setHackathon(data);
+        const hackathonData = hackathonRes.data?.hackathon || hackathonRes.data?.data || hackathonRes.data;
+        const profileData = profileRes.data?.user || profileRes.data?.data || profileRes.data;
+
+        if (ignore) return;
+        setHackathon(hackathonData);
+        setCurrentUserId(getId(profileData?._id || profileData?.id || profileData));
       } catch (err) {
+        console.error("HackathonDetailsPage failed to load:", err);
         if (!ignore) {
-          setError(err.response?.data?.message || "Couldn't load this hackathon.");
+          setError(err.response?.data?.message || err.message || "Couldn't load this hackathon.");
         }
       } finally {
         if (!ignore) setLoading(false);
       }
     }
 
-    fetchHackathon();
+    fetchData();
     return () => {
       ignore = true;
     };
   }, [id]);
 
-  async function handleJoinRequest() {
+  async function handleJoin() {
     setJoinError("");
     setJoining(true);
 
     try {
-      const token = localStorage.getItem("token");
-      // Axios placeholder — swap for the real endpoint once it's live.
-      await axios.post(
-        "/api/join-requests",
-        { hackathon: id, message: joinMessage },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setRequestSent(true);
+      await joinHackathon(id);
+      // Reflect the join locally right away rather than re-fetching —
+      // add the current user to the members list we already have.
+      setHackathon((prev) => ({
+        ...prev,
+        members: [...(prev.members || []), currentUserId],
+      }));
     } catch (err) {
-      setJoinError(err.response?.data?.message || "Couldn't send your join request.");
+      setJoinError(err.response?.data?.message || "Couldn't join this hackathon.");
     } finally {
       setJoining(false);
     }
@@ -138,9 +147,15 @@ export default function HackathonDetailsPage() {
     maxTeamSize,
     status,
     createdBy,
+    members = [],
   } = hackathon;
 
-  const isOwner = createdBy && currentUserId && (createdBy._id || createdBy.id || createdBy) === currentUserId;
+  const isOwner = createdBy && currentUserId && getId(createdBy) === currentUserId;
+  console.log("currentUserId:", currentUserId);
+console.log("createdBy:", getId(createdBy));
+console.log("isOwner:", isOwner);
+  const isMember = currentUserId && members.some((m) => getId(m) === currentUserId);
+  const isFull = maxTeamSize && members.length >= maxTeamSize;
 
   return (
     <AppShell>
@@ -170,7 +185,7 @@ export default function HackathonDetailsPage() {
           {createdBy && (
             <p className="text-sm text-ink-muted mb-5">
               Posted by{" "}
-              <span className="text-ink">{createdBy.displayName || createdBy.username || "a member"}</span>
+              <span className="text-ink">{createdBy.displayName || createdBy.username || createdBy.name || "a member"}</span>
             </p>
           )}
 
@@ -197,7 +212,7 @@ export default function HackathonDetailsPage() {
             {maxTeamSize && (
               <div className="flex items-center gap-2 text-sm text-ink-muted">
                 <Users size={15} className="text-accent-amber shrink-0" />
-                Max team size: {maxTeamSize}
+                {members.length}/{maxTeamSize} members
               </div>
             )}
             {prizePool && (
@@ -231,44 +246,55 @@ export default function HackathonDetailsPage() {
             )}
 
             {isOwner ? (
-              <>
-                <Link to={`/hackathons/${id}/edit`}>
-                  <Button variant="secondary" icon={Pencil}>
-                    Edit
-                  </Button>
-                </Link>
-                <Link to={`/hackathons/${id}/requests`}>
-                  <Button icon={ListChecks} className="flex-row-reverse">
-                    View join requests
-                  </Button>
-                </Link>
-              </>
-            ) : (
-              !requestSent && (
-                <Button onClick={handleJoinRequest} disabled={joining || status === "Closed"}>
-                  {joining ? "Sending..." : status === "Closed" ? "Registration closed" : "Request to join"}
-                </Button>
-              )
-            )}
+             <>
+    <Link to={`/hackathons/${id}/edit`}>
+        <Button variant="secondary" icon={Pencil}>
+            Edit
+        </Button>
+    </Link>
 
-            {requestSent && (
-              <span className="text-sm text-accent-teal font-medium">Join request sent ✓</span>
+    <Button
+        variant="danger"
+        onClick={async () => {
+            const ok = window.confirm(
+                "Delete this hackathon?"
+            );
+
+            if (!ok) return;
+
+            await deleteHackathon(id);
+
+            navigate("/hackathons/mine");
+        }}
+    >
+        Delete
+    </Button>
+
+    <Link to={`/hackathons/${id}/requests`}>
+        <Button icon={ListChecks}>
+            View Members
+        </Button>
+    </Link>
+</>
+            ) : isMember ? (
+              <span className="inline-flex items-center gap-1.5 text-sm text-accent-teal font-medium">
+                <Check size={15} />
+                You're a member
+              </span>
+            ) : (
+              <Button onClick={handleJoin} disabled={joining || status === "Closed" || isFull}>
+                {joining
+                  ? "Joining..."
+                  : status === "Closed"
+                    ? "Registration closed"
+                    : isFull
+                      ? "Team full"
+                      : "Join hackathon"}
+              </Button>
             )}
           </div>
 
-          {!isOwner && !requestSent && (
-            <div className="mt-4">
-              <textarea
-                rows={2}
-                value={joinMessage}
-                onChange={(e) => setJoinMessage(e.target.value)}
-                placeholder="Optional note to the organizer (e.g. what you'd bring to a team)"
-                disabled={joining}
-                className="w-full bg-bg-surface border border-border rounded-lg px-3.5 py-2.5 text-sm text-ink placeholder:text-ink-faint focus:border-accent-violet/50 outline-none transition-colors resize-none"
-              />
-              {joinError && <p className="text-xs text-accent-coral mt-2">{joinError}</p>}
-            </div>
-          )}
+          {joinError && <p className="text-xs text-accent-coral mt-3">{joinError}</p>}
         </Card>
       </div>
     </AppShell>

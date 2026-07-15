@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import axios from "axios";
 import { Plus, Calendar, Users, Loader2, Trophy } from "lucide-react";
+import { getHackathons } from "../../services/hackathonService";
+import { getProfile } from "../../services/userService";
 import AppShell from "../../components/layout/AppShell";
 import Card from "../../components/common/Card";
 import Button from "../../components/common/Button";
@@ -19,6 +20,11 @@ function formatDate(value) {
   return d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
 }
 
+function getId(value) {
+  if (!value) return null;
+  return typeof value === "string" ? value : value._id || value.id;
+}
+
 export default function MyHackathonsPage() {
   const [hackathons, setHackathons] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -31,14 +37,15 @@ export default function MyHackathonsPage() {
       setLoading(true);
       setError("");
       try {
-        const token = localStorage.getItem("token");
-        // Axios placeholder — swap for the real endpoint once it's live.
-        const res = await axios.get("/api/hackathons/mine", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const profileRes = await getProfile();
+        const profile = profileRes.data?.user || profileRes.data?.data || profileRes.data;
+        const currentUserId = getId(profile?._id || profile?.id || profile);
 
-        const data = res.data?.data || res.data || [];
-        if (!ignore) setHackathons(data);
+        const hackathonsRes = await getMyHackathons();
+
+        if (!ignore) {
+          setHackathons(allHackathons.filter((h) => getId(h.createdBy) === currentUserId));
+        }
       } catch (err) {
         if (!ignore) {
           setError(err.response?.data?.message || "Couldn't load your hackathons.");
@@ -141,7 +148,6 @@ export default function MyHackathonsPage() {
                 <Link to={`/hackathons/${h._id || h.id}/requests`} className="flex-1">
                   <Button size="sm" className="w-full">
                     Requests
-                    {typeof h.joinRequestCount === "number" ? ` (${h.joinRequestCount})` : ""}
                   </Button>
                 </Link>
               </div>

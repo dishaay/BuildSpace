@@ -45,6 +45,7 @@ export default function CreateHackathonPage() {
     e.preventDefault();
     setError("");
     setSubmitting(true);
+        console.log("SUBMIT CLICKED");
 
     try {
       const payload = {

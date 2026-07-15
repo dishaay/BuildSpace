@@ -31,6 +31,7 @@ const statusStyles = {
   Closed: "bg-accent-coral/15 text-accent-coral border-accent-coral/30",
 };
 
+
 function formatDate(value) {
   if (!value) return null;
   const d = new Date(value);
@@ -264,8 +265,7 @@ console.log("isOwner:", isOwner);
 
             await deleteHackathon(id);
 
-            navigate("/hackathons/mine");
-        }}
+window.location.href="/hackathons/mine";        }}
     >
         Delete
     </Button>

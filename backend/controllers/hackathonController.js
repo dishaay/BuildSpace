@@ -1,21 +1,24 @@
 const Hackathon = require("../models/Hackathon");
+const mongoose = require("mongoose");
 
-// CREATE HACKATHON
 const createHackathon = async (req, res) => {
-  try {
-    const {
-      title,
-      description,
-      officialLink,
-      registrationDeadline,
-      startDate,
-      endDate,
-      techStack,
-      mode,
-      location,
-      prizePool,
-      maxTeamSize,
-    } = req.body;
+    try {
+        console.log("CREATE HIT");
+        console.log("BODY:", req.body);
+
+        const {
+            title,
+            description,
+            officialLink,
+            registrationDeadline,
+            startDate,
+            endDate,
+            techStack,
+            mode,
+            location,
+            prizePool,
+            maxTeamSize,
+        } = req.body;
 
     if (!title || !description || !officialLink || !maxTeamSize) {
       return res.status(400).json({
@@ -108,46 +111,49 @@ const joinHackathon = async (req,res)=>{
 }
 
 //GET MY HACKATHONS
-const getMyHackathons = async (req,res)=>{
-    try{
+const getMyHackathons = async (req, res) => {
+    try {
+        console.log("USER:", req.user);
+
         const hackathons = await Hackathon.find({
-            createdBy:req.user._id
+            createdBy: req.user._id,
         });
+
+        console.log("FOUND:", hackathons);
 
         return res.status(200).json({
-            success:true,
-            hackathons
+            success: true,
+            hackathons,
         });
-
-    }catch(err){
+    } catch (err) {
         console.log(err);
 
         return res.status(500).json({
-            success:false,
-            message:"Server Error"
+            success: false,
+            message: "Server Error",
         });
     }
 };
 // GET ALL HACKATHONS
 const getHackathons = async (req, res) => {
-  try {
-    const hackathons = await Hackathon.find()
-      .populate("createdBy", "username avatar")
-      .sort({ createdAt: -1 });
-      console.log(hackathons);
-    return res.status(200).json({
-      success: true,
-      message: "Hackathons fetched successfully",
-      hackathons,
-    });
-  } catch (err) {
-    console.error(err);
+    console.log("DB:", mongoose.connection.name);
 
-    return res.status(500).json({
-      success: false,
-      message: "Server Error",
+    const raw = await mongoose.connection
+        .db
+        .collection("hackathons")
+        .find({})
+        .toArray();
+
+    console.log("RAW:", raw);
+
+    const hackathons = await Hackathon.find();
+
+    console.log("MODEL:", hackathons);
+
+    return res.json({
+        success: true,
+        hackathons,
     });
-  }
 };
 
 // GET SINGLE HACKATHON

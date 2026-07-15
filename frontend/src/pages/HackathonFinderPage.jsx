@@ -9,7 +9,7 @@ const candidates = [];
 
 export default function HackathonFinderPage() {
   const navigate = useNavigate();
-
+console.log("MY HACKATHONS PAGE MOUNTED");
 const [hackathons, setHackathons] = useState([]);
 useEffect(() => {
     async function fetchHackathons() {
@@ -34,8 +34,15 @@ useEffect(() => {
           <h1 className="font-display font-semibold text-2xl mb-1">Hackathon partner finder</h1>
           <p className="text-ink-muted text-sm">Post what you're building. Find who's missing from your team.</p>
         </div>
-        <Button icon={Plus}>Post your pitch</Button>
-      </div>
+<Button
+    icon={Plus}
+    onClick={() => {
+        console.log("BUTTON CLICKED");
+        navigate("/hackathons/new");
+    }}
+>
+    Post your pitch
+</Button>      </div>
 
 {/* Hackathon selector strip */}
 {/* Hackathon selector strip */}

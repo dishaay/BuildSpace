@@ -2,8 +2,10 @@ import api from "./api";
 
 export const getHackathons=()=>
     api.get("/hackathons");
-export const getMyHackathons = () =>
-    api.get("/hackathons/mine");
+
+export const getMyHackathons = async () => {
+    return await api.get("/hackathons/mine");
+};
 export const createHackathon=(data)=>
     api.post("/hackathons",data);
 

@@ -1,5 +1,5 @@
 const Project = require("../models/Project");
-
+const User = require("../models/User");
 const createProject = async (req,res) => {
     try {
 
@@ -42,6 +42,15 @@ const {
 
       await project.save();
 
+
+await User.findByIdAndUpdate(
+    req.user._id,
+    {
+        $push: {
+            projects: project._id,
+        },
+    }
+);
       return res.status(201).json({
         success: true,
         message: "Project created successfully",

@@ -33,7 +33,7 @@ export default function App() {
         <Route path="/projects/edit/:id" element={<EditProject />} />
         <Route path="/hackathons/new" element={<CreateHackathonPage />} />
         <Route path="/hackathons/:id" element={<HackathonDetailsPage />} />
-
+      
 <Route path="/hackathons/:id/edit" element={<EditHackathonPage />} />
 <Route path="/hackathons/mine" element={<MyHackathonsPage />} />
 <Route path="/hackathons/:id/requests" element={<JoinRequestsPage />} />

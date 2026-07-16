@@ -1,21 +1,27 @@
 const User = require("../models/User");
 
-// GET PROFILE
-
 const getMe = async (req, res) => {
     try {
-        const user = await User.findById(req.user._id);
+        const user = await User.findById(req.user._id)
+            .populate(
+                "projects",
+                "_id title description thumbnail techStack status"
+            )
+            .populate(
+                "hackathons",
+                "_id name date role result"
+            );
 
         return res.status(200).json({
             success: true,
-            user
+            user,
         });
     } catch (err) {
         console.log(err);
 
         return res.status(500).json({
             success: false,
-            message: "Server Error"
+            message: "Server Error",
         });
     }
 };

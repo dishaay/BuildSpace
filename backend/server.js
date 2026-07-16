@@ -24,7 +24,7 @@ const bookmarkRoutes =
     require(
         "./routes/bookmarkRoutes"
     );
-
+const postRoutes = require("./routes/postRoutes");
 
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
@@ -34,6 +34,7 @@ app.use("/api/join-requests", joinRequestRoutes);
 app.use("/api/comments", commentRoutes);
 app.use("/api/likes", likeRoutes);
 app.use("/api/bookmarks",bookmarkRoutes);
+app.use("/api/posts", postRoutes);
 
 
 app.get("/", (req, res) => {

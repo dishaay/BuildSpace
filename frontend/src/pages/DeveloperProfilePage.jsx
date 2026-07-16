@@ -219,18 +219,30 @@ console.log(myHackathons.length);
                   )}
                 </div>
                 <div className="grid sm:grid-cols-2 gap-3">
-                  {myProjects.slice(0, 2).map((p) => (
-                    <div key={p._id || p.id} className="bg-bg-surface border border-border rounded-xl p-4">
-                      <p className="font-mono text-sm text-accent-violet mb-1">{p.title}</p>
-                      <p className="text-xs text-ink-muted leading-relaxed mb-3">{p.description}</p>
-                      <div className="flex items-center gap-3 text-xs text-ink-faint font-mono flex-wrap">
-                        {(p.techStack || []).slice(0, 3).map((t) => (
-                          <span key={t}>{t}</span>
-                        ))}
-                        {p.status && <span>· {p.status}</span>}
-                      </div>
-                    </div>
-                  ))}
+                 {myProjects.slice(0, 2).map((p) => (
+                  
+  <Link
+    key={p._id}
+    to={`/projects/${p._id}`}
+    className="block bg-bg-surface border border-border rounded-xl p-4 hover:border-accent-violet transition"
+  >
+    <p className="font-mono text-sm text-accent-violet mb-1">
+      {p.title}
+    </p>
+
+    <p className="text-xs text-ink-muted leading-relaxed mb-3">
+      {p.description}
+    </p>
+
+    <div className="flex items-center gap-3 text-xs text-ink-faint font-mono flex-wrap">
+      {(p.techStack || []).slice(0, 3).map((t) => (
+        <span key={t}>{t}</span>
+        
+      ))}
+      {p.status && <span>· {p.status}</span>}
+    </div>
+  </Link>
+))}
                   {myProjects.length === 0 && (
                     <p className="text-sm text-ink-faint">No pinned projects yet.</p>
                   )}
@@ -252,8 +264,8 @@ console.log(myHackathons.length);
                 </div>
                 <div className="flex flex-col gap-2.5">
                   {myHackathons.slice(0, 2).map((h) => (
-                    <div
-                      key={h._id || h.id}
+                    <Link
+    to={`/hackathons/${h._id}`} key={h._id}
                       className="flex items-center justify-between gap-3 bg-bg-surface border border-border rounded-xl px-4 py-3"
                     >
                       <div className="min-w-0">
@@ -268,7 +280,7 @@ console.log(myHackathons.length);
                           {h.status}
                         </span>
                       )}
-                    </div>
+                    </Link>
                   ))}
                   {myHackathons.length === 0 && (
                     <p className="text-sm text-ink-faint">No hackathons yet.</p>
@@ -301,8 +313,9 @@ console.log(myHackathons.length);
           {tab === "Hackathons" && (
             <div className="flex flex-col gap-3">
               {myHackathons.map((h) => (
-                <div
-                  key={h._id || h.id}
+                <Link
+        to={`/hackathons/${h._id}`}
+        key={h._id}
                   className="flex items-center justify-between gap-3 bg-bg-surface border border-border rounded-xl p-4"
                 >
                   <div className="min-w-0">
@@ -317,7 +330,7 @@ console.log(myHackathons.length);
                       {h.status}
                     </span>
                   )}
-                </div>
+                </Link>
               ))}
               {myHackathons.length === 0 && (
                 <p className="text-sm text-ink-faint">No hackathons yet.</p>

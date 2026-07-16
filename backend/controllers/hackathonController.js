@@ -1,6 +1,6 @@
 const Hackathon = require("../models/Hackathon");
 const mongoose = require("mongoose");
-
+const User = require("../models/User");
 const createHackathon = async (req, res) => {
     try {
         console.log("CREATE HIT");
@@ -43,7 +43,14 @@ const createHackathon = async (req, res) => {
     });
 
     await hackathon.save();
-
+    await User.findByIdAndUpdate(
+    req.user._id,
+    {
+        $push: {
+            hackathons: hackathon._id,
+        },
+    }
+);
     return res.status(201).json({
       success: true,
       message: "Hackathon created successfully",

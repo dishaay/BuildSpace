@@ -1,77 +1,14 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Star, GitFork, Calendar, Users, Trophy, ArrowRight, PenSquare } from "lucide-react";
+import { Star, GitFork, Calendar, Users, Trophy, ArrowRight, Loader2, Heart, Trash2 } from "lucide-react";
 import AppShell from "../components/layout/AppShell";
 import Card from "../components/common/Card";
 import Button from "../components/common/Button";
 import Avatar from "../components/common/Avatar";
-import Tag from "../components/common/Tag";
-
-const latestProjects = [
-  {
-    id: "p1",
-    name: "queue-lite",
-    tagline: "A tiny embeddable job queue for Node, no Redis required",
-    owner: { displayName: "Arin Mehta", username: "arinmehta", avatar: "AM", avatarColor: "bg-accent-violet" },
-    stars: 1240,
-    forks: 87,
-    tags: ["node", "queues"],
-  },
-  {
-    id: "p2",
-    name: "formkit-ui",
-    tagline: "Accessible form primitives for React with zero runtime CSS",
-    owner: { displayName: "Kofi Boateng", username: "kofi.b", avatar: "KB", avatarColor: "bg-accent-teal" },
-    stars: 892,
-    forks: 54,
-    tags: ["react", "a11y"],
-  },
-  {
-    id: "p3",
-    name: "vect-search",
-    tagline: "Lightweight vector search you can run on a Raspberry Pi",
-    owner: { displayName: "Priya Sharma", username: "priyasharma", avatar: "PS", avatarColor: "bg-accent-coral" },
-    stars: 3401,
-    forks: 298,
-    tags: ["ml", "search"],
-  },
-];
-
-const latestHackathons = [
-  {
-    id: "h1",
-    title: "BuildFast Global Hackathon",
-    startDate: "Aug 14, 2026",
-    endDate: "Aug 16, 2026",
-    mode: "Remote",
-    maxTeamSize: 4,
-    status: "Open",
-  },
-  {
-    id: "h2",
-    title: "GreenTech Sprint",
-    startDate: "Sep 4, 2026",
-    endDate: "Sep 6, 2026",
-    mode: "Hybrid · Bengaluru",
-    maxTeamSize: 5,
-    status: "Open",
-  },
-  {
-    id: "h3",
-    title: "HealthHack Asia",
-    startDate: "Sep 20, 2026",
-    endDate: "Sep 21, 2026",
-    mode: "Remote",
-    maxTeamSize: 3,
-    status: "Full",
-  },
-];
-
-const recentDevelopers = [
-  { id: "u1", displayName: "Devon Kessler", username: "devon_k", avatar: "DK", avatarColor: "bg-accent-amber", title: "DevOps · Kubernetes" },
-  { id: "u2", displayName: "Lin Shu", username: "linshu", avatar: "LS", avatarColor: "bg-accent-violet", title: "ML engineer" },
-  { id: "u3", displayName: "Renata Paz", username: "renata_p", avatar: "RP", avatarColor: "bg-accent-teal", title: "Mobile · Flutter" },
-  { id: "u4", displayName: "Sam Wu", username: "sam.wu", avatar: "SW", avatarColor: "bg-accent-coral", title: "Security researcher" },
-];
+import { getPosts, createPost, deletePost, toggleLikePost } from "../services/postService";
+import { getProjects } from "../services/projectService";
+import { getHackathons } from "../services/hackathonService";
+import { getProfile } from "../services/userService";
 
 const statusStyles = {
   Open: "bg-accent-teal/15 text-accent-teal border-accent-teal/30",
@@ -79,15 +16,24 @@ const statusStyles = {
   Closed: "bg-accent-coral/15 text-accent-coral border-accent-coral/30",
 };
 
+function getId(value) {
+  if (!value) return null;
+  return typeof value === "string" ? value : value._id || value.id;
+}
+
+function formatTimestamp(value) {
+  if (!value) return "";
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return "";
+  return d.toLocaleDateString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+}
+
 function SectionHeader({ title, viewAllHref }) {
   return (
     <div className="flex items-center justify-between mb-4">
       <h2 className="font-display font-semibold text-lg sm:text-xl text-ink">{title}</h2>
       {viewAllHref && (
-        <Link
-          to={viewAllHref}
-          className="flex items-center gap-1 text-sm text-accent-violet hover:underline shrink-0"
-        >
+        <Link to={viewAllHref} className="flex items-center gap-1 text-sm text-accent-violet hover:underline shrink-0">
           View all
           <ArrowRight size={14} />
         </Link>
@@ -96,113 +42,302 @@ function SectionHeader({ title, viewAllHref }) {
   );
 }
 
+function PostComposer({ onPosted }) {
+  const [text, setText] = useState("");
+  const [posting, setPosting] = useState(false);
+  const [error, setError] = useState("");
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    if (!text.trim()) return;
+
+    setError("");
+    setPosting(true);
+    try {
+      const res = await createPost({ content: text.trim() });
+      onPosted(res.data.post);
+      setText("");
+    } catch (err) {
+      setError(err.response?.data?.message || "Couldn't publish your post.");
+    } finally {
+      setPosting(false);
+    }
+  }
+
+  return (
+    <Card padding="md" className="mb-6">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+        {error && (
+          <div className="bg-accent-coral/10 border border-accent-coral/30 text-accent-coral text-sm rounded-lg px-3.5 py-2.5">
+            {error}
+          </div>
+        )}
+        <textarea
+          rows={3}
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          placeholder="Share what you're building, learning, or stuck on..."
+          disabled={posting}
+          className="w-full bg-bg-surface border border-border rounded-lg px-3.5 py-2.5 text-sm text-ink placeholder:text-ink-faint focus:border-accent-violet/50 outline-none transition-colors resize-none disabled:opacity-50"
+        />
+        <Button type="submit" size="sm" disabled={posting || !text.trim()} className="self-end">
+          {posting ? "Posting..." : "Post"}
+        </Button>
+      </form>
+    </Card>
+  );
+}
+
+function PostItem({ post, currentUserId, onDeleted }) {
+  const [liked, setLiked] = useState((post.likes || []).some((id) => getId(id) === currentUserId));
+  const [likesCount, setLikesCount] = useState(post.likes?.length || 0);
+  const [liking, setLiking] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  const isOwner = getId(post.author) === currentUserId;
+
+  async function handleToggleLike() {
+    if (liking) return;
+    setLiking(true);
+    const wasLiked = liked;
+    setLiked(!wasLiked);
+    setLikesCount((prev) => prev + (wasLiked ? -1 : 1));
+
+    try {
+      const res = await toggleLikePost(post._id);
+      setLiked(res.data.liked);
+      setLikesCount(res.data.likesCount);
+    } catch (err) {
+      setLiked(wasLiked);
+      setLikesCount((prev) => prev + (wasLiked ? 1 : -1));
+      console.error("Failed to toggle like:", err);
+    } finally {
+      setLiking(false);
+    }
+  }
+
+  async function handleDelete() {
+    if (deleting) return;
+    setDeleting(true);
+    try {
+      await deletePost(post._id);
+      onDeleted(post._id);
+    } catch (err) {
+      console.error("Failed to delete post:", err);
+      setDeleting(false);
+    }
+  }
+
+  return (
+    <Card padding="md" className="flex gap-3">
+      <Avatar
+        user={{
+          avatar: (post.author?.name || post.author?.username || "?").slice(0, 2).toUpperCase(),
+          avatarColor: "bg-accent-violet",
+        }}
+        size="sm"
+      />
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            <p className="text-sm font-medium text-ink">{post.author?.name || post.author?.username || "Someone"}</p>
+            <span className="text-xs text-ink-faint font-mono">{formatTimestamp(post.createdAt)}</span>
+          </div>
+          {isOwner && (
+            <button
+              onClick={handleDelete}
+              disabled={deleting}
+              className="text-ink-faint hover:text-accent-coral transition-colors disabled:opacity-50 shrink-0"
+            >
+              <Trash2 size={14} />
+            </button>
+          )}
+        </div>
+        <p className="text-sm text-ink-muted mt-1 whitespace-pre-wrap">{post.content}</p>
+        <button
+          onClick={handleToggleLike}
+          disabled={liking}
+          className={`flex items-center gap-1.5 mt-2.5 text-xs transition-colors disabled:opacity-50 ${
+            liked ? "text-accent-coral" : "text-ink-faint hover:text-accent-violet"
+          }`}
+        >
+          <Heart size={14} fill={liked ? "currentColor" : "none"} />
+          {likesCount}
+        </button>
+      </div>
+    </Card>
+  );
+}
+
 export default function FeedPage() {
+  const [currentUserId, setCurrentUserId] = useState(null);
+
+  const [posts, setPosts] = useState([]);
+  const [postsLoading, setPostsLoading] = useState(true);
+  const [postsError, setPostsError] = useState("");
+
+  const [latestProjects, setLatestProjects] = useState([]);
+  const [latestHackathons, setLatestHackathons] = useState([]);
+
+  useEffect(() => {
+    let ignore = false;
+
+    async function fetchFeed() {
+      setPostsLoading(true);
+      setPostsError("");
+      try {
+        const [profileRes, postsRes, projectsRes, hackathonsRes] = await Promise.all([
+          getProfile().catch(() => null), // feed is viewable even if this fails for some reason
+          getPosts(),
+          getProjects(),
+          getHackathons(),
+        ]);
+
+        if (ignore) return;
+
+        if (profileRes) {
+          const profile = profileRes.data.user;
+          setCurrentUserId(getId(profile?._id || profile?.id));
+        }
+
+        setPosts(postsRes.data.posts || []);
+
+        const allProjects = projectsRes.data.projects || projectsRes.data.data || [];
+        setLatestProjects(allProjects.slice(0, 3));
+
+        const allHackathons = hackathonsRes.data.hackathons || [];
+        setLatestHackathons(allHackathons.slice(0, 3));
+      } catch (err) {
+        console.error("FeedPage failed to load:", err);
+        if (!ignore) {
+          setPostsError(err.response?.data?.message || err.message || "Couldn't load the feed.");
+        }
+      } finally {
+        if (!ignore) setPostsLoading(false);
+      }
+    }
+
+    fetchFeed();
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
+  function handlePosted(newPost) {
+    setPosts((prev) => [newPost, ...prev]);
+  }
+
+  function handleDeleted(postId) {
+    setPosts((prev) => prev.filter((p) => p._id !== postId));
+  }
+
   return (
     <AppShell>
-      <div className="flex items-center justify-between gap-4 mb-8 flex-wrap">
-        <div>
-          <h1 className="font-display font-semibold text-2xl mb-1">Feed</h1>
-          <p className="text-ink-muted text-sm">What's new across projects, hackathons, and people.</p>
+      <div className="grid lg:grid-cols-[1fr_320px] gap-8 items-start">
+        {/* Main feed column */}
+        <div className="min-w-0">
+          <div className="mb-6">
+            <h1 className="font-display font-semibold text-2xl mb-1">Feed</h1>
+            <p className="text-ink-muted text-sm">What's new across the community.</p>
+          </div>
+
+          <PostComposer onPosted={handlePosted} />
+
+          {postsLoading && (
+            <div className="flex items-center justify-center py-16">
+              <div className="flex items-center gap-2.5 text-ink-muted text-sm">
+                <Loader2 size={16} className="animate-spin" />
+                Loading feed...
+              </div>
+            </div>
+          )}
+
+          {!postsLoading && postsError && (
+            <div className="bg-accent-coral/10 border border-accent-coral/30 text-accent-coral text-sm rounded-lg px-4 py-3">
+              {postsError}
+            </div>
+          )}
+
+          {!postsLoading && !postsError && posts.length === 0 && (
+            <Card padding="lg" className="text-center">
+              <p className="text-sm text-ink-muted">No posts yet — be the first to share something.</p>
+            </Card>
+          )}
+
+          {!postsLoading && !postsError && posts.length > 0 && (
+            <div className="flex flex-col gap-3">
+              {posts.map((post) => (
+                <PostItem
+                  key={post._id}
+                  post={post}
+                  currentUserId={currentUserId}
+                  onDeleted={handleDeleted}
+                />
+              ))}
+            </div>
+          )}
         </div>
-        <Button icon={PenSquare}>New post</Button>
-      </div>
 
-      <div className="flex flex-col gap-10">
-        {/* Latest Projects */}
-        <section>
-          <SectionHeader title="Latest projects" viewAllHref="/projects" />
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {latestProjects.map((p) => (
-              <Card key={p.id} hoverable padding="md" className="flex flex-col gap-3">
-                <div>
-                  <p className="font-mono text-sm text-accent-violet mb-1">{p.name}</p>
-                  <p className="text-xs text-ink-muted leading-relaxed">{p.tagline}</p>
-                </div>
-
-                <div className="flex flex-wrap gap-2">
-                  {p.tags.map((t) => (
-                    <Tag key={t}>{t}</Tag>
-                  ))}
-                </div>
-
-                <div className="flex items-center justify-between pt-2 mt-auto border-t border-border-soft">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <Avatar user={p.owner} size="xs" />
-                    <span className="text-xs text-ink-muted truncate">{p.owner.displayName}</span>
-                  </div>
-                  <div className="flex items-center gap-3 text-ink-faint text-xs font-mono shrink-0">
+        {/* Sidebar: latest projects + hackathons */}
+        <aside className="flex flex-col gap-8">
+          <section>
+            <SectionHeader title="Latest projects" viewAllHref="/projects" />
+            <div className="flex flex-col gap-3">
+              {latestProjects.map((p) => (
+                <Card key={p._id || p.id} hoverable padding="sm" className="flex flex-col gap-2">
+                  <p className="font-mono text-sm text-accent-violet">{p.title}</p>
+                  <p className="text-xs text-ink-muted leading-relaxed line-clamp-2">{p.description}</p>
+                  <div className="flex items-center gap-3 text-ink-faint text-xs font-mono">
                     <span className="flex items-center gap-1">
-                      <Star size={12} /> {p.stars}
+                      <Star size={12} /> {p.likes?.length || 0}
                     </span>
                     <span className="flex items-center gap-1">
-                      <GitFork size={12} /> {p.forks}
+                      <GitFork size={12} /> {p.bookmarks?.length || 0}
                     </span>
                   </div>
-                </div>
-              </Card>
-            ))}
-          </div>
-        </section>
+                </Card>
+              ))}
+              {latestProjects.length === 0 && (
+                <p className="text-sm text-ink-faint">No projects yet.</p>
+              )}
+            </div>
+          </section>
 
-        {/* Latest Hackathons */}
-        <section>
-          <SectionHeader title="Latest hackathons" viewAllHref="/hackathons/mine" />
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {latestHackathons.map((h) => (
-              <Card key={h.id} hoverable padding="md" className="flex flex-col gap-3">
-                <div className="flex items-start justify-between gap-2">
-                  <h3 className="font-display font-semibold text-ink text-sm leading-snug">{h.title}</h3>
-                  <span
-                    className={`shrink-0 font-mono text-[11px] px-2 py-1 rounded-full border ${
-                      statusStyles[h.status] || "bg-bg-hover text-ink-muted border-border"
-                    }`}
-                  >
-                    {h.status}
-                  </span>
-                </div>
-
-                <div className="flex flex-col gap-1.5 text-xs text-ink-faint font-mono">
-                  <span className="flex items-center gap-1.5">
-                    <Calendar size={12} />
-                    {h.startDate} – {h.endDate}
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <Trophy size={12} />
-                    {h.mode}
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <Users size={12} />
-                    Max team size {h.maxTeamSize}
-                  </span>
-                </div>
-
-                <Button variant="secondary" size="sm" className="w-full mt-auto">
-                  View details
-                </Button>
-              </Card>
-            ))}
-          </div>
-        </section>
-
-        {/* Recent Developers */}
-        <section>
-          <SectionHeader title="Recent developers" viewAllHref="/communities" />
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {recentDevelopers.map((dev) => (
-              <Card key={dev.id} hoverable padding="md" className="flex flex-col items-center text-center gap-3">
-                <Avatar user={dev} size="lg" />
-                <div className="min-w-0">
-                  <p className="text-sm font-medium text-ink truncate">{dev.displayName}</p>
-                  <p className="text-xs text-ink-faint font-mono truncate">@{dev.username}</p>
-                  <p className="text-xs text-ink-muted mt-1 truncate">{dev.title}</p>
-                </div>
-                <Button variant="secondary" size="sm" className="w-full">
-                  View profile
-                </Button>
-              </Card>
-            ))}
-          </div>
-        </section>
+          <section>
+            <SectionHeader title="Latest hackathons" viewAllHref="/hackathons/mine" />
+            <div className="flex flex-col gap-3">
+              {latestHackathons.map((h) => (
+                <Card key={h._id || h.id} hoverable padding="sm" className="flex flex-col gap-2">
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="font-medium text-ink text-sm leading-snug">{h.title}</p>
+                    {h.status && (
+                      <span
+                        className={`shrink-0 font-mono text-[11px] px-2 py-0.5 rounded-full border ${
+                          statusStyles[h.status] || "bg-bg-hover text-ink-muted border-border"
+                        }`}
+                      >
+                        {h.status}
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-3 text-xs text-ink-faint font-mono">
+                    <span className="flex items-center gap-1">
+                      <Users size={12} /> Max {h.maxTeamSize}
+                    </span>
+                    {h.prizePool && (
+                      <span className="flex items-center gap-1">
+                        <Trophy size={12} /> {h.prizePool}
+                      </span>
+                    )}
+                  </div>
+                </Card>
+              ))}
+              {latestHackathons.length === 0 && (
+                <p className="text-sm text-ink-faint">No hackathons yet.</p>
+              )}
+            </div>
+          </section>
+        </aside>
       </div>
     </AppShell>
   );

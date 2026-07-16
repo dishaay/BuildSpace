@@ -56,6 +56,19 @@ lookingForTeam: {
   type: Boolean,
   default: false,
 },
+projects: [
+  {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Project",
+  },
+],
+
+hackathons: [
+  {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Hackathon",
+  },
+],
 
 linkedin: {
   type: String,
@@ -73,6 +86,7 @@ linkedin: {
   },
 }, {
   timestamps: true,
-});
+},
+);
 
 module.exports = mongoose.model("User", userSchema);

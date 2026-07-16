@@ -1,5 +1,5 @@
 import { getProfile } from "../../services/userService";
-
+import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Trophy, FolderGit2, Users, ExternalLink, Globe } from "lucide-react";
 import GithubMark from "../../components/common/GithubMark";
@@ -44,6 +44,7 @@ export default function PublicProfilePage() {
     }
 
     fetchProfile();
+    
     return () => {
       ignore = true;
     };
@@ -83,7 +84,7 @@ export default function PublicProfilePage() {
   } = profile;
 
   const avatarSrc = profilePicture || avatarUrl;
-
+  console.log(projects);
   return (
     <div className="min-h-screen bg-slate-950 py-10 px-4 sm:px-6">
       <div className="max-w-3xl mx-auto">
@@ -180,11 +181,14 @@ export default function PublicProfilePage() {
           ) : (
             <div className="grid sm:grid-cols-2 gap-4">
               {projects.map((p) => (
-                <a
-                  key={p._id || p.id}
-                  href={`/projects/${p._id || p.id}`}
-                  className="group bg-slate-900 border border-slate-800 rounded-xl overflow-hidden hover:border-indigo-500/40 transition-colors"
-                >
+                
+                <Link
+    key={p._id}
+    to={`/projects/${p._id}`}
+    onClick={() => console.log("CLICKED", p._id)}
+    className="group border-4 border-red-500 bg-slate-900 rounded-xl overflow-hidden"
+>
+                    
                   <div className="w-full h-28 bg-slate-800 flex items-center justify-center overflow-hidden">
                     {p.thumbnail ? (
                       <img src={p.thumbnail} alt={p.title} className="w-full h-full object-cover" />
@@ -222,7 +226,7 @@ export default function PublicProfilePage() {
                       </div>
                     )}
                   </div>
-                </a>
+                </Link>
               ))}
             </div>
           )}

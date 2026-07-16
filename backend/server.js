@@ -18,12 +18,22 @@ const userRoutes = require("./routes/userRoutes");
 const projectRoutes = require("./routes/projectRoutes");
 const hackathonRoutes = require("./routes/hackathonRoutes");
 const joinRequestRoutes = require("./routes/joinRequestRoutes");
+const commentRoutes = require("./routes/commentRoutes");
+const likeRoutes = require("./routes/likeRoutes");
+const bookmarkRoutes =
+    require(
+        "./routes/bookmarkRoutes"
+    );
+
 
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/projects", projectRoutes);
 app.use("/api/hackathons", hackathonRoutes);
 app.use("/api/join-requests", joinRequestRoutes);
+app.use("/api/comments", commentRoutes);
+app.use("/api/likes", likeRoutes);
+app.use("/api/bookmarks",bookmarkRoutes);
 
 
 app.get("/", (req, res) => {

@@ -6,9 +6,11 @@ const {
   getProjectById,
   updateProject,
   deleteProject,
+  toggleLike,
+  toggleBookmark,
 } = require("../controllers/projectController");
 
-const protect  = require("../middleware/authMiddleware");
+const protect = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
@@ -18,6 +20,9 @@ router.get("/", getProjects);
 
 router.get("/:id", getProjectById);
 
+router.post("/:id/like", protect, toggleLike);
+
+router.post("/:id/bookmark", protect, toggleBookmark);
 
 router.put("/:id", protect, updateProject);
 

@@ -74,18 +74,13 @@ const getProjects=async(req,res)=>{
   }
 }
 
-const getProjectById = async (req, res) => {
+// POST /projects/:id/like
+const toggleLike = async (req, res) => {
   try {
-        console.log("GET PROJECT BY ID CALLED");
-            console.log(req.params.id);
-
     const { id } = req.params;
+    const userId = req.user._id;
 
-    const project = await Project.findById(id).populate(
-      "createdBy",
-      "username avatar"
-    );
-
+    const project = await Project.findById(id);
     if (!project) {
       return res.status(404).json({
         success: false,
@@ -93,25 +88,99 @@ const getProjectById = async (req, res) => {
       });
     }
 
-    return res.status(200).json({
-      success: true,
-      message: "Project fetched successfully",
-      project,
-    });
-  } catch (err) {
-    console.error(err);
+    const alreadyLiked = project.likes.some((likeId) => likeId.toString() === userId.toString());
 
-    return res.status(500).json({
+    if (alreadyLiked) {
+      project.likes = project.likes.filter((likeId) => likeId.toString() !== userId.toString());
+    } else {
+      project.likes.push(userId);
+    }
+
+    await project.save();
+
+    res.status(200).json({
+      success: true,
+      message: alreadyLiked ? "Like removed" : "Project liked",
+      liked: !alreadyLiked,
+      likesCount: project.likes.length,
+    });
+  } catch (error) {
+    console.error("toggleLike error:", error);
+    res.status(500).json({
       success: false,
-      message: "Server Error",
+      message: "Something went wrong while updating the like",
     });
   }
+};
+
+// POST /projects/:id/bookmark
+const toggleBookmark = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user._id;
+
+    const project = await Project.findById(id);
+    if (!project) {
+      return res.status(404).json({ success: false, message: "Project not found" });
+    }
+
+    const alreadyBookmarked = project.bookmarks.some((bId) => bId.toString() === userId.toString());
+
+    if (alreadyBookmarked) {
+      project.bookmarks = project.bookmarks.filter((bId) => bId.toString() !== userId.toString());
+    } else {
+      project.bookmarks.push(userId);
+    }
+
+    await project.save();
+
+    res.status(200).json({
+      success: true,
+      message: alreadyBookmarked ? "Bookmark removed" : "Project bookmarked",
+      bookmarked: !alreadyBookmarked,
+      bookmarksCount: project.bookmarks.length,
+    });
+  } catch (error) {
+    console.error("toggleBookmark error:", error);
+    res.status(500).json({ success: false, message: "Something went wrong while updating the bookmark" });
+  }
+};
+
+const getProjectById = async (req, res) => {
+    try {
+        const project = await Project.findById(
+            req.params.id
+        )
+            .populate(
+                "createdBy",
+                "username avatar"
+            );
+
+        if (!project) {
+            return res.status(404).json({
+                success: false,
+                message: "Project not found",
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            project,
+        });
+    } catch (err) {
+        console.log(err);
+
+        return res.status(500).json({
+            success: false,
+            message: "Server Error",
+        });
+    }
 };
 const updateProject = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const project = await Project.findById(id);
+    const project = await Project.findById(id)
 
     if (!project) {
       return res.status(404).json({
@@ -218,10 +287,6 @@ const deleteProject = async (req, res) => {
   }
 };
 
-module.exports = {
-  createProject,
-  getProjects,
-  getProjectById,
-  updateProject,
-  deleteProject,
-};
+
+
+module.exports = { getProjects, getProjectById, createProject, updateProject, deleteProject,toggleLike,toggleBookmark };

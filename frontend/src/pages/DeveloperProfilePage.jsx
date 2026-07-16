@@ -10,7 +10,6 @@ import ContributionGraph from "../components/common/ContributionGraph";
 import { getProfile } from "../services/userService";
 import { getProjects } from "../services/projectService";
 import { getMyHackathons } from "../services/hackathonService";
-import { getHackathons } from "../services/hackathonService";
 
 const tabs = ["Overview", "Projects", "Hackathons", "Posts", "Activity"];
 
@@ -177,7 +176,7 @@ console.log(myHackathons.length);
             </div>
           </div>
         </aside>
-
+            
         {/* Right: content */}
         <div className="min-w-0">
           <div className="flex items-center gap-1 mb-5 border-b border-border overflow-x-auto">

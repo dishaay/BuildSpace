@@ -12,8 +12,9 @@ import Avatar from "../../components/common/Avatar";
 // original JoinRequestsPage so nothing else needs to change.
 export default function JoinRequestsPage() {
   const { id } = useParams();
+  console.log("JOIN REQUEST PAGE ID:", id);
   const navigate = useNavigate();
-
+  console.log("URL ID:", id);
   const [hackathon, setHackathon] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");

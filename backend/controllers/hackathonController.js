@@ -74,14 +74,16 @@ const joinHackathon = async (req,res)=>{
             });
         }
 
-        if(
-            hackathon.members.includes(req.user._id)
-        ){
-            return res.status(400).json({
-                success:false,
-                message:"Already joined."
-            });
-        }
+        const alreadyJoined = hackathon.members.some(
+    (member) => member.toString() === req.user._id.toString()
+);
+
+if (alreadyJoined) {
+    return res.status(400).json({
+        success: false,
+        message: "Already joined.",
+    });
+}
 
         hackathon.members.push(req.user._id);
 

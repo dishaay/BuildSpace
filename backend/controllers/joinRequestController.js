@@ -51,20 +51,17 @@ const requestToJoin = async (req, res) => {
       });
     }
 
-    const request = new JoinRequest({
+    const request = await JoinRequest.create({
       user: req.user._id,
       hackathon: hackathonId,
       message,
     });
-
-    await request.save();
 
     return res.status(201).json({
       success: true,
       message: "Join request sent successfully",
       request,
     });
-
   } catch (err) {
     console.error(err);
 
@@ -76,13 +73,23 @@ const requestToJoin = async (req, res) => {
 };
 
 // =============================
-// View Requests (Creator)
+// View Pending Requests
+// =============================
+// =============================
+// View Pending Requests
 // =============================
 const getJoinRequests = async (req, res) => {
   try {
     const { hackathonId } = req.params;
 
-    const hackathon = await Hackathon.findById(hackathonId);
+    console.log("PARAM ID:", hackathonId);
+
+    const hackathon = await Hackathon.findById(
+      hackathonId
+    ).populate(
+      "members",
+      "username avatar bio skills name github portfolio linkedin"
+    );
 
     if (!hackathon) {
       return res.status(404).json({
@@ -91,24 +98,40 @@ const getJoinRequests = async (req, res) => {
       });
     }
 
-    if (hackathon.createdBy.toString() !== req.user._id.toString()) {
+    console.log(
+      "HACKATHON ID:",
+      hackathon._id.toString()
+    );
+
+    console.log(
+      "CREATED BY:",
+      hackathon.createdBy.toString()
+    );
+
+    console.log(
+      "CURRENT USER:",
+      req.user._id.toString()
+    );
+
+    console.log(
+      "MEMBERS:",
+      hackathon.members
+    );
+
+    if (
+      hackathon.createdBy.toString() !==
+      req.user._id.toString()
+    ) {
       return res.status(403).json({
         success: false,
         message: "Not authorized",
       });
     }
 
-    const hackathonWithMembers = await Hackathon.findById(hackathonId)
-      .populate(
-        "members",
-        "username avatar bio skills name github portfolio linkedin"
-      );
-      console.log(hackathonWithMembers.members);
     return res.status(200).json({
       success: true,
-      requests: hackathonWithMembers.members,
+      requests: hackathon.members,
     });
-
   } catch (err) {
     console.error(err);
 
@@ -118,7 +141,6 @@ const getJoinRequests = async (req, res) => {
     });
   }
 };
-
 // =============================
 // Accept Request
 // =============================
@@ -137,7 +159,10 @@ const acceptRequest = async (req, res) => {
 
     const hackathon = await Hackathon.findById(request.hackathon);
 
-    if (hackathon.createdBy.toString() !== req.user._id.toString()) {
+    if (
+      hackathon.createdBy.toString() !==
+      req.user._id.toString()
+    ) {
       return res.status(403).json({
         success: false,
         message: "Not authorized",
@@ -151,9 +176,6 @@ const acceptRequest = async (req, res) => {
       });
     }
 
-    request.status = "Accepted";
-    await request.save();
-
     hackathon.members.push(request.user);
 
     if (hackathon.members.length >= hackathon.maxTeamSize) {
@@ -162,11 +184,13 @@ const acceptRequest = async (req, res) => {
 
     await hackathon.save();
 
+    request.status = "Accepted";
+    await request.save();
+
     return res.status(200).json({
       success: true,
       message: "Request accepted successfully",
     });
-
   } catch (err) {
     console.error(err);
 
@@ -195,7 +219,10 @@ const rejectRequest = async (req, res) => {
 
     const hackathon = await Hackathon.findById(request.hackathon);
 
-    if (hackathon.createdBy.toString() !== req.user._id.toString()) {
+    if (
+      hackathon.createdBy.toString() !==
+      req.user._id.toString()
+    ) {
       return res.status(403).json({
         success: false,
         message: "Not authorized",
@@ -209,7 +236,6 @@ const rejectRequest = async (req, res) => {
       success: true,
       message: "Request rejected successfully",
     });
-
   } catch (err) {
     console.error(err);
 

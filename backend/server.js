@@ -44,9 +44,6 @@ app.get("/", (req, res) => {
 
 
 connectDB(); //this will connect my database. 
-
-console.log("Before app.listen");
-
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server is listening on port ${PORT}`);
 });

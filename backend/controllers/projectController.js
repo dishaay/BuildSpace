@@ -162,7 +162,8 @@ const getProjectById = async (req, res) => {
         )
             .populate(
                 "createdBy",
-                "username avatar"
+                "username avatar _id"
+
             );
 
         if (!project) {

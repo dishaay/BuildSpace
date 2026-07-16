@@ -260,8 +260,11 @@ const {
   stars,
   forks,
 } = project;
-console.log("LIKED:", liked);
-console.log("BOOKMARKED:", bookmarked);
+
+const isOwner =
+    currentUserId &&
+    createdBy &&
+    getId(createdBy) === currentUserId;
   return (
     <AppShell>
       <div className="max-w-3xl mx-auto">
@@ -435,24 +438,32 @@ console.log("BOOKMARKED:", bookmarked);
 
             {/* Actions */}
             <div className="flex items-center gap-3 pt-5 border-t border-border-soft flex-wrap">
-              {githubLink && (
-                <a href={githubLink} target="_blank" rel="noreferrer">
-                  <Button variant="secondary" icon={GithubMark}>
-                    View on GitHub
-                  </Button>
-                </a>
-              )}
-              {liveLink && (
-                <a href={liveLink} target="_blank" rel="noreferrer">
-                  <Button icon={ExternalLink} className="flex-row-reverse">
-                    Live demo
-                  </Button>
-                </a>
-              )}
-              {!githubLink && !liveLink && (
-                <p className="text-xs text-ink-faint">No links provided for this project.</p>
-              )}
-            </div>
+
+    {githubLink && (
+        <a href={githubLink} target="_blank">
+            <Button variant="secondary">
+                View on GitHub
+            </Button>
+        </a>
+    )}
+
+    {liveLink && (
+        <a href={liveLink} target="_blank">
+            <Button>
+                Live Demo
+            </Button>
+        </a>
+    )}
+
+    {isOwner && (
+        <Link to={`/projects/edit/${project._id}`}>
+            <Button variant="secondary">
+                Edit Project
+            </Button>
+        </Link>
+    )}
+
+</div>
           </div>
         </div>
       </div>

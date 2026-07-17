@@ -231,6 +231,10 @@ export default function FeedPage() {
     setPosts((prev) => prev.filter((p) => p._id !== postId));
   }
 
+  const filteredProjects = latestProjects.filter((p) =>
+  p.title.toLowerCase().includes(searchQuery)
+);
+
   return (
     <AppShell>
       <div className="grid lg:grid-cols-[1fr_320px] gap-8 items-start">
@@ -258,16 +262,16 @@ export default function FeedPage() {
             </div>
           )}
 
-          {!postsLoading && !postsError && posts.length === 0 && (
+          {!postsLoading && !postsError && filteredPosts.length === 0 && (
             <Card padding="lg" className="text-center">
-              <p className="text-sm text-ink-muted">No posts yet — be the first to share something.</p>
+              <p className="text-sm text-ink-muted">No results found.</p>
             </Card>
           )}
 
           {!postsLoading && !postsError && posts.length > 0 && (
             <div className="flex flex-col gap-3">
-              {posts.map((post) => (
-                <PostItem
+{filteredPosts.map((post) => (
+                  <PostItem
                   key={post._id}
                   post={post}
                   currentUserId={currentUserId}
@@ -283,7 +287,7 @@ export default function FeedPage() {
           <section>
             <SectionHeader title="Latest projects" viewAllHref="/projects" />
             <div className="flex flex-col gap-3">
-              {latestProjects.map((p) => (
+              {filteredProjects.map((p) => (
                 <Card key={p._id || p.id} hoverable padding="sm" className="flex flex-col gap-2">
                   <p className="font-mono text-sm text-accent-violet">{p.title}</p>
                   <p className="text-xs text-ink-muted leading-relaxed line-clamp-2">{p.description}</p>

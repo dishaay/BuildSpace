@@ -12,7 +12,16 @@ const postSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+    images: {
+      type: [String], // public URLs (served from /uploads, see upload middleware)
+      default: [],
+    },
     likes: {
+      type: [mongoose.Schema.Types.ObjectId],
+      ref: "User",
+      default: [],
+    },
+    bookmarks: {
       type: [mongoose.Schema.Types.ObjectId],
       ref: "User",
       default: [],

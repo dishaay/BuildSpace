@@ -122,13 +122,11 @@ if (alreadyJoined) {
 //GET MY HACKATHONS
 const getMyHackathons = async (req, res) => {
     try {
-        console.log("USER:", req.user);
 
         const hackathons = await Hackathon.find({
             createdBy: req.user._id,
         });
 
-        console.log("FOUND:", hackathons);
 
         return res.status(200).json({
             success: true,
@@ -145,7 +143,6 @@ const getMyHackathons = async (req, res) => {
 };
 // GET ALL HACKATHONS
 const getHackathons = async (req, res) => {
-    console.log("DB:", mongoose.connection.name);
 
     const raw = await mongoose.connection
         .db
@@ -153,11 +150,9 @@ const getHackathons = async (req, res) => {
         .find({})
         .toArray();
 
-    console.log("RAW:", raw);
 
     const hackathons = await Hackathon.find();
 
-    console.log("MODEL:", hackathons);
 
     return res.json({
         success: true,

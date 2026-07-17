@@ -1,16 +1,17 @@
 import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { MapPin, Calendar, LinkIcon, Trophy, FolderGit2, FileText } from "lucide-react";
+import { MapPin, Calendar, LinkIcon, Trophy, FolderGit2, FileText, Sparkles } from "lucide-react";
 import GithubMark from "../components/common/GithubMark";
 import AppShell from "../components/layout/AppShell";
 import Avatar from "../components/common/Avatar";
 import Tag from "../components/common/Tag";
 import Button from "../components/common/Button";
 import ContributionGraph from "../components/common/ContributionGraph";
-import { getProfile } from "../services/userService";
+import { getProfile, getGithubContributions,getUserById } from "../services/userService";
 import { getProjects } from "../services/projectService";
-import { getMyHackathons } from "../services/hackathonService";
-
+import { getHackathons } from "../services/hackathonService";
+import { getPosts } from "../services/postService";
+import { useParams } from "react-router-dom";
 const tabs = ["Overview", "Projects", "Hackathons", "Posts", "Activity"];
 
 function getId(value) {
@@ -18,72 +19,122 @@ function getId(value) {
   return typeof value === "string" ? value : value._id || value.id;
 }
 
+// Accepts either a bare username ("dishaay") or a full URL
+// ("https://github.com/dishaay") and always returns just the username.
+function extractGithubUsername(value) {
+  if (!value) return null;
+  const trimmed = value.trim();
+  const match = trimmed.match(/github\.com\/([^/?#]+)/i);
+  if (match) return match[1];
+  return trimmed.replace(/^@/, "");
+}
+
+function githubHref(value) {
+  const username = extractGithubUsername(value);
+  return username ? `https://github.com/${username}` : null;
+}
+
+function toHref(value) {
+  if (!value) return null;
+  return /^https?:\/\//i.test(value) ? value : `https://${value}`;
+}
+
+function formatRelativeTime(value) {
+  if (!value) return "";
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return "";
+  const diffMs = Date.now() - d.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  if (diffMins < 60) return `${Math.max(diffMins, 0)}m ago`;
+  const diffHours = Math.floor(diffMins / 60);
+  if (diffHours < 24) return `${diffHours}h ago`;
+  const diffDays = Math.floor(diffHours / 24);
+  if (diffDays < 30) return `${diffDays}d ago`;
+  return d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+}
+
 export default function DeveloperProfilePage() {
+  const { id } = useParams();
   const [profile, setProfile] = useState(null);
   const [myProjects, setMyProjects] = useState([]);
   const [myHackathons, setMyHackathons] = useState([]);
-  // No posts service exists yet — kept as an empty list so the Posts tab
-  // has something to map over without inventing a data source.
-  const [myPosts] = useState([]);
+  const [myPosts, setMyPosts] = useState([]);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [tab, setTab] = useState("Overview");
 
+  // Real GitHub contribution data — fetched separately and best-effort,
+  // since it depends on an external API and a username the user may not
+  // have set. Falls back to the placeholder graph if unavailable.
+  const [contributionWeeks, setContributionWeeks] = useState(null);
+  const [contributionsError, setContributionsError] = useState("");
+
   useEffect(() => {
     let ignore = false;
 
     async function fetchProfileData() {
-  setLoading(true);
-  setError("");
+      setLoading(true);
+      setError("");
 
-  try {
-    // Get profile
-    const profileRes = await getProfile();
-    console.log("PROFILE RESPONSE:", profileRes.data);
+      try {
+        let profileRes;
 
-    const profileData = profileRes.data.user;
-    const currentUserId = profileData._id;
+if (id) {
+    profileRes = await getUserById(id);
+} else {
+    profileRes = await getProfile();
+}
 
-    // Get projects
-    const projectsRes = await getProjects();
-    console.log("PROJECTS RESPONSE:", projectsRes.data);
+const profileData = profileRes.data.user;
+        const currentUserId = getId(profileData?._id || profileData?.id);
 
-    // Get hackathons
-    const hackathonsRes = await getMyHackathons();
-    console.log("HACKATHONS RESPONSE:", hackathonsRes.data);
+        const [projectsRes, hackathonsRes, postsRes] = await Promise.all([
+          getProjects(),
+          getHackathons(),
+          getPosts(),
+        ]);
 
-    const allProjects =
-      projectsRes.data.projects ||
-      projectsRes.data.data ||
-      [];
+        const allProjects = projectsRes.data.projects || projectsRes.data.data || [];
+        // Confirmed shape: GET /hackathons -> { hackathons: [...] }
+        // No /mine endpoint exists on the backend (it collides with the
+        // /:id route), so we fetch everything and filter to this user's own.
+        const allHackathons = hackathonsRes.data.hackathons || [];
+        const allPosts = postsRes.data.posts || [];
 
-    setMyHackathons(
-    hackathonsRes.data.hackathons || []
-);
+        if (ignore) return;
 
-    if (ignore) return;
+        setProfile(profileData);
+        setMyProjects(allProjects.filter((p) => getId(p.createdBy) === currentUserId));
+        setMyHackathons(allHackathons.filter((h) => getId(h.createdBy) === currentUserId));
+        setMyPosts(allPosts.filter((p) => getId(p.author) === currentUserId));
 
-    setProfile(profileData);
-
-    setMyProjects(
-      allProjects.filter((p) => getId(p.createdBy) === currentUserId)
-    );
-
-    setMyHackathons(
-  hackathonsRes.data.hackathons || hackathonsRes.data
-);
-
-  } catch (err) {
-    console.error("FULL ERROR:", err);
-    console.error("RESPONSE:", err.response);
-
-    if (!ignore) {
-      setError(err.response?.data?.message || "Couldn't load your profile.");
-    }
-  } finally {
-    if (!ignore) setLoading(false);
-  }
+        // Best-effort: fetch the real GitHub contribution calendar if a
+        // GitHub username/URL is set on the profile. Failure here doesn't
+        // block the rest of the page — it just falls back to the
+        // placeholder graph.
+        const username = extractGithubUsername(profileData?.github);
+        if (username) {
+          try {
+            const contribRes = await getGithubContributions(username);
+            if (!ignore) setContributionWeeks(contribRes.data.weeks || null);
+          } catch (err) {
+            console.error("Couldn't fetch GitHub contributions:", err);
+            if (!ignore) {
+              setContributionsError(
+                err.response?.data?.message || "Couldn't load GitHub contributions."
+              );
+            }
+          }
+        }
+      } catch (err) {
+        console.error("DeveloperProfilePage failed to load:", err);
+        if (!ignore) {
+          setError(err.response?.data?.message || err.message || "Couldn't load your profile.");
+        }
+      } finally {
+        if (!ignore) setLoading(false);
+      }
     }
 
     fetchProfileData();
@@ -111,13 +162,35 @@ export default function DeveloperProfilePage() {
       </AppShell>
     );
   }
-  console.log(myHackathons);
-console.log(myHackathons.length);
+
   const stats = [
     { label: "Projects", value: myProjects.length, icon: FolderGit2 },
     { label: "Hackathons", value: myHackathons.length, icon: Trophy },
     { label: "Posts", value: myPosts.length, icon: FileText },
   ];
+
+  // Derived "Activity" feed — no separate activity-tracking backend exists,
+  // so this is just projects/hackathons/posts merged and sorted by date.
+  const activityItems = [
+    ...myProjects.map((p) => ({
+      key: `project-${p._id}`,
+      text: `Created project "${p.title}"`,
+      date: p.createdAt,
+      href: `/projects/${p._id}`,
+    })),
+    ...myHackathons.map((h) => ({
+      key: `hackathon-${h._id}`,
+      text: `Posted hackathon "${h.title}"`,
+      date: h.createdAt,
+      href: `/hackathons/${h._id}`,
+    })),
+    ...myPosts.map((post) => ({
+      key: `post-${post._id}`,
+      text: post.content?.length > 80 ? `${post.content.slice(0, 80)}…` : post.content || "Shared a post",
+      date: post.createdAt,
+      href: `/feed#post-${post._id}`,
+    })),
+  ].sort((a, b) => new Date(b.date) - new Date(a.date));
 
   return (
     <AppShell>
@@ -157,12 +230,26 @@ console.log(myHackathons.length);
             <div className="flex items-center gap-2 justify-center">
               <Calendar size={14} /> Joined {new Date(profile.createdAt).toLocaleDateString()}
             </div>
-            <div className="flex items-center gap-2 justify-center">
-              <GithubMark size={14} /> {profile.github}
-            </div>
-            <div className="flex items-center gap-2 justify-center">
-              <LinkIcon size={14} /> {profile.portfolio}
-            </div>
+            {profile.github && (
+              <a
+                href={githubHref(profile.github)}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center gap-2 justify-center hover:text-accent-violet transition-colors"
+              >
+                <GithubMark size={14} /> {profile.github}
+              </a>
+            )}
+            {profile.portfolio && (
+              <a
+                href={toHref(profile.portfolio)}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center gap-2 justify-center hover:text-accent-violet transition-colors"
+              >
+                <LinkIcon size={14} /> {profile.portfolio}
+              </a>
+            )}
           </div>
 
           <div className="w-full mt-5 pt-5 border-t border-border-soft">
@@ -176,7 +263,7 @@ console.log(myHackathons.length);
             </div>
           </div>
         </aside>
-            
+
         {/* Right: content */}
         <div className="min-w-0">
           <div className="flex items-center gap-1 mb-5 border-b border-border overflow-x-auto">
@@ -200,9 +287,18 @@ console.log(myHackathons.length);
               <div className="bg-bg-surface border border-border rounded-xl p-5">
                 <div className="flex items-center justify-between mb-4">
                   <p className="text-sm font-medium text-ink">Contribution activity</p>
-                  <p className="text-xs text-ink-faint font-mono">312 contributions this year</p>
+                  {contributionWeeks ? (
+                    <p className="text-xs text-ink-faint font-mono">Live from GitHub</p>
+                  ) : (
+                    <p className="text-xs text-ink-faint font-mono">
+                      {profile.github ? "Preview data" : "Add a GitHub link to see real activity"}
+                    </p>
+                  )}
                 </div>
-                <ContributionGraph seed={11} size="md" />
+                <ContributionGraph weeks={contributionWeeks} seed={11} size="md" />
+                {contributionsError && (
+                  <p className="text-xs text-accent-coral mt-2">{contributionsError}</p>
+                )}
               </div>
 
               {/* My Projects */}
@@ -219,30 +315,22 @@ console.log(myHackathons.length);
                   )}
                 </div>
                 <div className="grid sm:grid-cols-2 gap-3">
-                 {myProjects.slice(0, 2).map((p) => (
-                  
-  <Link
-    key={p._id}
-    to={`/projects/${p._id}`}
-    className="block bg-bg-surface border border-border rounded-xl p-4 hover:border-accent-violet transition"
-  >
-    <p className="font-mono text-sm text-accent-violet mb-1">
-      {p.title}
-    </p>
-
-    <p className="text-xs text-ink-muted leading-relaxed mb-3">
-      {p.description}
-    </p>
-
-    <div className="flex items-center gap-3 text-xs text-ink-faint font-mono flex-wrap">
-      {(p.techStack || []).slice(0, 3).map((t) => (
-        <span key={t}>{t}</span>
-        
-      ))}
-      {p.status && <span>· {p.status}</span>}
-    </div>
-  </Link>
-))}
+                  {myProjects.slice(0, 2).map((p) => (
+                    <Link
+                      key={p._id}
+                      to={`/projects/${p._id}`}
+                      className="block bg-bg-surface border border-border rounded-xl p-4 hover:border-accent-violet transition"
+                    >
+                      <p className="font-mono text-sm text-accent-violet mb-1">{p.title}</p>
+                      <p className="text-xs text-ink-muted leading-relaxed mb-3">{p.description}</p>
+                      <div className="flex items-center gap-3 text-xs text-ink-faint font-mono flex-wrap">
+                        {(p.techStack || []).slice(0, 3).map((t) => (
+                          <span key={t}>{t}</span>
+                        ))}
+                        {p.status && <span>· {p.status}</span>}
+                      </div>
+                    </Link>
+                  ))}
                   {myProjects.length === 0 && (
                     <p className="text-sm text-ink-faint">No pinned projects yet.</p>
                   )}
@@ -265,8 +353,9 @@ console.log(myHackathons.length);
                 <div className="flex flex-col gap-2.5">
                   {myHackathons.slice(0, 2).map((h) => (
                     <Link
-    to={`/hackathons/${h._id}`} key={h._id}
-                      className="flex items-center justify-between gap-3 bg-bg-surface border border-border rounded-xl px-4 py-3"
+                      to={`/hackathons/${h._id}`}
+                      key={h._id}
+                      className="flex items-center justify-between gap-3 bg-bg-surface border border-border rounded-xl px-4 py-3 hover:border-accent-violet transition"
                     >
                       <div className="min-w-0">
                         <p className="text-sm text-ink truncate">{h.title}</p>
@@ -293,7 +382,11 @@ console.log(myHackathons.length);
           {tab === "Projects" && (
             <div className="grid sm:grid-cols-2 gap-3">
               {myProjects.map((p) => (
-                <div key={p._id || p.id} className="bg-bg-surface border border-border rounded-xl p-4">
+                <Link
+                  key={p._id || p.id}
+                  to={`/projects/${p._id}`}
+                  className="block bg-bg-surface border border-border rounded-xl p-4 hover:border-accent-violet transition"
+                >
                   <p className="font-mono text-sm text-accent-violet mb-1">{p.title}</p>
                   <p className="text-xs text-ink-muted leading-relaxed mb-3">{p.description}</p>
                   <div className="flex items-center gap-3 text-xs text-ink-faint font-mono flex-wrap">
@@ -302,7 +395,7 @@ console.log(myHackathons.length);
                     ))}
                     {p.status && <span>· {p.status}</span>}
                   </div>
-                </div>
+                </Link>
               ))}
               {myProjects.length === 0 && (
                 <p className="text-sm text-ink-faint">No pinned projects yet.</p>
@@ -314,9 +407,9 @@ console.log(myHackathons.length);
             <div className="flex flex-col gap-3">
               {myHackathons.map((h) => (
                 <Link
-        to={`/hackathons/${h._id}`}
-        key={h._id}
-                  className="flex items-center justify-between gap-3 bg-bg-surface border border-border rounded-xl p-4"
+                  to={`/hackathons/${h._id}`}
+                  key={h._id}
+                  className="flex items-center justify-between gap-3 bg-bg-surface border border-border rounded-xl p-4 hover:border-accent-violet transition"
                 >
                   <div className="min-w-0">
                     <p className="font-medium text-ink truncate">{h.title}</p>
@@ -341,17 +434,43 @@ console.log(myHackathons.length);
           {tab === "Posts" && (
             <div className="flex flex-col gap-3">
               {myPosts.map((post) => (
-                <div key={post._id || post.id} className="bg-bg-surface border border-border rounded-xl p-4">
-                  <p className="font-medium text-ink mb-1">{post.title}</p>
-                </div>
+                <Link
+                  key={post._id || post.id}
+                  to={`/feed#post-${post._id}`}
+                  className="bg-bg-surface border border-border rounded-xl p-4 hover:border-accent-violet/40 transition-colors block"
+                >
+                  <p className="text-sm text-ink leading-relaxed line-clamp-2">{post.content}</p>
+                  <div className="flex items-center gap-3 text-xs text-ink-faint font-mono mt-2.5">
+                    <span>{new Date(post.createdAt).toLocaleDateString()}</span>
+                    <span>·</span>
+                    <span>{post.likes?.length || 0} likes</span>
+                  </div>
+                </Link>
               ))}
               {myPosts.length === 0 && <p className="text-sm text-ink-faint">No posts yet.</p>}
             </div>
           )}
 
           {tab === "Activity" && (
-            <div className="flex flex-col gap-3 font-mono text-sm text-ink-muted">
-              <p className="text-sm text-ink-faint font-sans">No recent activity yet.</p>
+            <div className="flex flex-col gap-3">
+              {activityItems.map((item) => (
+                <Link
+                  key={item.key}
+                  to={item.href}
+                  className="flex items-center justify-between gap-3 bg-bg-surface border border-border rounded-xl px-4 py-3 hover:border-accent-violet/40 transition-colors"
+                >
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <Sparkles size={14} className="text-accent-violet shrink-0" />
+                    <p className="text-sm text-ink-muted truncate">{item.text}</p>
+                  </div>
+                  <span className="text-xs text-ink-faint font-mono shrink-0">
+                    {formatRelativeTime(item.date)}
+                  </span>
+                </Link>
+              ))}
+              {activityItems.length === 0 && (
+                <p className="text-sm text-ink-faint">No recent activity yet.</p>
+              )}
             </div>
           )}
         </div>

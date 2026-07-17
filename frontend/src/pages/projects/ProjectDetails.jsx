@@ -84,9 +84,7 @@ export default function ProjectDetails() {
       res.data?.project ||
       res.data?.data ||
       res.data;
-    console.log(res.data);
-    console.log("LIKES:", data.likes);
-console.log("BOOKMARKS:", data.bookmarks);
+
     if (ignore) return;
 
     setProject(data);
@@ -189,10 +187,8 @@ console.log("BOOKMARKS:", data.bookmarks);
   }
   const handleToggleBookmark = async () => {
   try {
-    console.log("bookmark ca")
     await toggleBookmark(id);
     setBookmarked((prev) => !prev);
-    console.log("BOOKMARK CLICKED");
   } catch (err) {
     console.log(err);
   }

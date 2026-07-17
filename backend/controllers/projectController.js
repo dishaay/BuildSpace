@@ -186,6 +186,34 @@ const getProjectById = async (req, res) => {
         });
     }
 };
+
+// GET /projects/:id/likes — list of users who liked this project
+const getProjectLikes = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const project = await Project.findById(id).populate("likes", "username name avatar");
+
+    if (!project) {
+      return res.status(404).json({
+        success: false,
+        message: "Project not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      likes: project.likes,
+      count: project.likes.length,
+    });
+  } catch (error) {
+    console.error("getProjectLikes error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Something went wrong while fetching likes",
+    });
+  }
+};
 const updateProject = async (req, res) => {
   try {
     const { id } = req.params;
@@ -299,4 +327,4 @@ const deleteProject = async (req, res) => {
 
 
 
-module.exports = { getProjects, getProjectById, createProject, updateProject, deleteProject,toggleLike,toggleBookmark };
+module.exports = { getProjects, getProjectById, createProject, updateProject, deleteProject, toggleLike, toggleBookmark, getProjectLikes };

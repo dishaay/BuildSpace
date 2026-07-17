@@ -82,7 +82,6 @@ const getJoinRequests = async (req, res) => {
   try {
     const { hackathonId } = req.params;
 
-    console.log("PARAM ID:", hackathonId);
 
     const hackathon = await Hackathon.findById(
       hackathonId
@@ -97,26 +96,6 @@ const getJoinRequests = async (req, res) => {
         message: "Hackathon not found",
       });
     }
-
-    console.log(
-      "HACKATHON ID:",
-      hackathon._id.toString()
-    );
-
-    console.log(
-      "CREATED BY:",
-      hackathon.createdBy.toString()
-    );
-
-    console.log(
-      "CURRENT USER:",
-      req.user._id.toString()
-    );
-
-    console.log(
-      "MEMBERS:",
-      hackathon.members
-    );
 
     if (
       hackathon.createdBy.toString() !==

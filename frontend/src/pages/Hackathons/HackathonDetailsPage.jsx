@@ -152,9 +152,7 @@ export default function HackathonDetailsPage() {
   } = hackathon;
 
   const isOwner = createdBy && currentUserId && getId(createdBy) === currentUserId;
-  console.log("currentUserId:", currentUserId);
-console.log("createdBy:", getId(createdBy));
-console.log("isOwner:", isOwner);
+
   const isMember = currentUserId && members.some((m) => getId(m) === currentUserId);
   const isFull = maxTeamSize && members.length >= maxTeamSize;
 

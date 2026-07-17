@@ -45,7 +45,6 @@ export default function CreateHackathonPage() {
     e.preventDefault();
     setError("");
     setSubmitting(true);
-        console.log("SUBMIT CLICKED");
 
     try {
       const payload = {
@@ -61,7 +60,6 @@ export default function CreateHackathonPage() {
         prizePool: form.prizePool,
         maxTeamSize: Number(form.maxTeamSize),
       };
-      console.log(localStorage.getItem("token"));
       await createHackathon(payload);
 
       navigate("/hackathons/mine");

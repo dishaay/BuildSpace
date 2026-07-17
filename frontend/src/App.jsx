@@ -16,6 +16,8 @@ import HackathonDetailsPage from "./pages/hackathons/HackathonDetailsPage";
 import MyHackathonsPage from "./pages/hackathons/MyHackathonsPage";
 import JoinRequestsPage from "./pages/hackathons/JoinRequestsPage";
 import ProjectDetails from "./pages/projects/ProjectDetails";
+import SearchPage from "./pages/SearchPage";
+import PostDetailsPage from "./pages/PostDetailsPage";
 export default function App() {
   return (
     <BrowserRouter>
@@ -25,6 +27,11 @@ export default function App() {
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/feed" element={<HomeFeedPage />} />
         <Route path="/profile" element={<DeveloperProfilePage />} />
+        <Route path="/profile/:id" element={<DeveloperProfilePage />} />
+        <Route
+    path="/posts/:id"
+    element={<PostDetailsPage />}
+/>
         <Route path="/communities" element={<CommunitiesPage />} />
         <Route path="/hackathons" element={<HackathonFinderPage />} />
         <Route path="/projects" element={<ProjectShowcasePage />} />
@@ -33,7 +40,10 @@ export default function App() {
         <Route path="/projects/edit/:id" element={<EditProject />} />
         <Route path="/hackathons/new" element={<CreateHackathonPage />} />
         <Route path="/hackathons/:id" element={<HackathonDetailsPage />} />
-      
+      <Route
+    path="/search"
+    element={<SearchPage />}
+/>
 <Route path="/hackathons/:id/edit" element={<EditHackathonPage />} />
 <Route path="/hackathons/mine" element={<MyHackathonsPage />} />
 <Route path="/hackathons/:id/requests" element={<JoinRequestsPage />} />

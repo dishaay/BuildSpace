@@ -1,4 +1,5 @@
 const User = require("../models/User");
+const { getContributionCalendar } = require("../services/githubService");
 
 const getMe = async (req, res) => {
     try {
@@ -83,7 +84,78 @@ const updateProfile = async (req, res) => {
     }
 };
 
+const getUsers = async (req, res) => {
+    try {
+        const users = await User.find().select(
+            "name username bio avatar"
+        );
+
+        return res.status(200).json({
+            success: true,
+            users,
+        });
+    } catch (err) {
+        console.log(err);
+
+        return res.status(500).json({
+            success: false,
+            message: "Server Error",
+        });
+    }
+};
+ 
+const getUserById = async (req, res) => {
+    try {
+        const user = await User.findById(
+            req.params.id
+        );
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found",
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            user,
+        });
+    } catch (err) {
+        res.status(500).json({
+            success: false,
+            message: "Server Error",
+        });
+    }
+};
+// GET /users/github/:username/contributions
+const getGithubContributions = async (req, res) => {
+  try {
+    const { username } = req.params;
+ 
+    const calendar = await getContributionCalendar(username);
+ 
+    res.status(200).json({
+      success: true,
+      message: "Contributions fetched successfully",
+      totalContributions: calendar.totalContributions,
+      weeks: calendar.weeks,
+    });
+  } catch (error) {
+    console.error("getGithubContributions error:", error);
+    res.status(502).json({
+      success: false,
+      message: error.message || "Couldn't fetch GitHub contributions",
+    });
+  }
+};
+ 
+
 module.exports = {
     getMe,
     updateProfile,
+    getGithubContributions,
+    getUsers,
+        getUserById,
+
 };

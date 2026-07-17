@@ -12,14 +12,12 @@ const protect = async (req, res, next) => {
         try {
             token = req.headers.authorization.split(" ")[1];
 
-            console.log("TOKEN:", token);
 
             const decoded = jwt.verify(
                 token,
                 process.env.JWT_SECRET
             );
 
-            console.log("DECODED:", decoded);
 
             req.user = {
                 _id: decoded.userId,
@@ -27,7 +25,6 @@ const protect = async (req, res, next) => {
 
             next();
         } catch (err) {
-            console.log("JWT ERROR:", err.message);
 
             return res.status(401).json({
                 message: "Unauthorized",

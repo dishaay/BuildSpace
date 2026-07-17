@@ -28,15 +28,12 @@ export default function MyHackathonsPage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    console.log("MY HACKATHONS PAGE MOUNTED");
 
     const fetchMyHackathons = async () => {
       try {
-        console.log("FETCH STARTED");
 
         const res = await getMyHackathons();
 
-        console.log("API RESPONSE:", res.data);
 
         setHackathons(res.data?.hackathons || []);
       } catch (err) {

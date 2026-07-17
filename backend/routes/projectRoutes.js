@@ -11,6 +11,7 @@ const {
 } = require("../controllers/projectController");
 
 const protect = require("../middleware/authMiddleware");
+const { getProjectLikes } = require("../controllers/projectController");
 
 const router = express.Router();
 
@@ -21,6 +22,7 @@ router.get("/", getProjects);
 router.get("/:id", getProjectById);
 
 router.post("/:id/like", protect, toggleLike);
+router.get("/:id/likes", getProjectLikes);
 
 router.post("/:id/bookmark", protect, toggleBookmark);
 

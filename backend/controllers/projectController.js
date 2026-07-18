@@ -15,7 +15,6 @@ const {
     liveLink,
     tags,
     status,
-    screenshots
 } = req.body;
 
     if (!title || !description) {
@@ -23,6 +22,15 @@ const {
         message: "Title and Description are required"
     });
 }
+
+// req.files comes from upload.fields([{name:"thumbnail",maxCount:1},{name:"screenshots",maxCount:6}])
+// on the route. Each file.path is already a full Cloudinary URL.
+// Falls back to req.body.thumbnail/screenshots (plain URL strings) if no
+// files were actually uploaded, so JSON-only clients still work.
+const thumbnail = req.files?.thumbnail?.[0]?.path || req.body.thumbnail || "";
+const screenshots = req.files?.screenshots?.length
+  ? req.files.screenshots.map((file) => file.path)
+  : req.body.screenshots || [];
 
   const project = new Project({
     title,
@@ -36,6 +44,7 @@ const {
     liveLink,
     tags,
     status,
+    thumbnail,
     screenshots,
     createdBy:req.user._id
 });
@@ -122,6 +131,34 @@ const toggleLike = async (req, res) => {
   }
 };
 
+// GET /projects/:id/likes — list of users who liked this project
+const getProjectLikes = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const project = await Project.findById(id).populate("likes", "username name avatar");
+
+    if (!project) {
+      return res.status(404).json({
+        success: false,
+        message: "Project not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      likes: project.likes,
+      count: project.likes.length,
+    });
+  } catch (error) {
+    console.error("getProjectLikes error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Something went wrong while fetching likes",
+    });
+  }
+};
+
 // POST /projects/:id/bookmark
 const toggleBookmark = async (req, res) => {
   try {
@@ -186,34 +223,6 @@ const getProjectById = async (req, res) => {
         });
     }
 };
-
-// GET /projects/:id/likes — list of users who liked this project
-const getProjectLikes = async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    const project = await Project.findById(id).populate("likes", "username name avatar");
-
-    if (!project) {
-      return res.status(404).json({
-        success: false,
-        message: "Project not found",
-      });
-    }
-
-    res.status(200).json({
-      success: true,
-      likes: project.likes,
-      count: project.likes.length,
-    });
-  } catch (error) {
-    console.error("getProjectLikes error:", error);
-    res.status(500).json({
-      success: false,
-      message: "Something went wrong while fetching likes",
-    });
-  }
-};
 const updateProject = async (req, res) => {
   try {
     const { id } = req.params;
@@ -250,6 +259,14 @@ const updateProject = async (req, res) => {
       screenshots,
     } = req.body;
 
+    // Same as createProject: prefer a freshly uploaded file over a plain
+    // URL string in the body, but don't overwrite the existing value if
+    // neither was sent with this request.
+    const uploadedThumbnail = req.files?.thumbnail?.[0]?.path;
+    const uploadedScreenshots = req.files?.screenshots?.length
+      ? req.files.screenshots.map((file) => file.path)
+      : null;
+
     if (title) project.title = title;
     if (description) project.description = description;
     if (inspiration !== undefined)
@@ -267,10 +284,10 @@ if (futurePlans !== undefined)
     if (techStack) project.techStack = techStack;
     if (githubLink) project.githubLink = githubLink;
     if (liveLink) project.liveLink = liveLink;
-    if (thumbnail) project.thumbnail = thumbnail;
+    if (uploadedThumbnail || thumbnail) project.thumbnail = uploadedThumbnail || thumbnail;
     if (tags) project.tags = tags;
     if (status) project.status = status;
-    if (screenshots) project.screenshots = screenshots;
+    if (uploadedScreenshots || screenshots) project.screenshots = uploadedScreenshots || screenshots;
 
     await project.save();
 

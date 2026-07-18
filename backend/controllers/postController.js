@@ -13,9 +13,9 @@ const createPost = async (req, res) => {
       });
     }
 
-    // req.files comes from the `upload.array("images", 4)` middleware —
-    // build public URLs pointing at the statically-served /uploads folder.
-    const images = (req.files || []).map((file) => `/uploads/${file.filename}`);
+    // With Cloudinary, req.files[i].path is already a complete, permanent
+    // HTTPS URL — no path-building needed, unlike the old local-disk setup.
+    const images = (req.files || []).map((file) => file.path);
 
     const post = await Post.create({
       content: content.trim(),
@@ -213,7 +213,7 @@ const getPostComments = async (req, res) => {
 const getPostById = async (req, res) => {
     try {
         const post = await Post.findById(req.params.id)
-            .populate("author", "name username");
+            .populate("author", "username name avatar");
 
         if (!post) {
             return res.status(404).json({
@@ -287,6 +287,5 @@ module.exports = {
   toggleBookmarkPost,
   getPostComments,
   createPostComment,
-      getPostById,
-
+  getPostById,
 };

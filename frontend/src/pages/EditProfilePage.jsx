@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { ImagePlus } from "lucide-react";
 import { getProfile, updateProfile } from "../services/userService";
+import { getImageUrl } from "../utils/getImageUrl";
 import AppShell from "../components/layout/AppShell";
 import Card from "../components/common/Card";
 import Input from "../components/common/Input";
@@ -31,6 +33,10 @@ export default function EditProfilePage() {
   const navigate = useNavigate();
   const [form, setForm] = useState(emptyForm);
 
+  const [existingAvatar, setExistingAvatar] = useState("");
+  const [avatarFile, setAvatarFile] = useState(null);
+  const [avatarPreview, setAvatarPreview] = useState("");
+
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
 
@@ -45,7 +51,6 @@ export default function EditProfilePage() {
       setLoading(true);
       setLoadError("");
       try {
-        // Confirmed shape: GET /users/profile -> { user }
         const res = await getProfile();
         const profile = res.data.user;
         if (ignore || !profile) return;
@@ -59,6 +64,7 @@ export default function EditProfilePage() {
           portfolio: profile.portfolio || "",
           linkedin: profile.linkedin || "",
         });
+        setExistingAvatar(profile.avatar || "");
       } catch (err) {
         if (!ignore) {
           setLoadError(err.response?.data?.message || "Couldn't load your profile.");
@@ -78,6 +84,14 @@ export default function EditProfilePage() {
     setForm((prev) => ({ ...prev, [key]: value }));
   }
 
+  function handleAvatarChange(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setAvatarFile(file);
+    setAvatarPreview(URL.createObjectURL(file));
+    e.target.value = "";
+  }
+
   async function handleSubmit(e) {
     e.preventDefault();
     setSaveError("");
@@ -85,17 +99,19 @@ export default function EditProfilePage() {
     setSaving(true);
 
     try {
-      const payload = {
-        name: form.name,
-        username: form.username,
-        bio: form.bio,
-        skills: toList(form.skills),
-        github: form.github,
-        portfolio: form.portfolio,
-        linkedin: form.linkedin,
-      };
+      // multipart/form-data — needs to be FormData (not plain JSON) since
+      // an avatar file may be attached.
+      const formData = new FormData();
+      formData.append("name", form.name);
+      formData.append("username", form.username);
+      formData.append("bio", form.bio);
+      formData.append("github", form.github);
+      formData.append("portfolio", form.portfolio);
+      formData.append("linkedin", form.linkedin);
+      toList(form.skills).forEach((s) => formData.append("skills", s));
+      if (avatarFile) formData.append("avatar", avatarFile);
 
-      await updateProfile(payload);
+      await updateProfile(formData);
 
       setSaveSuccess(true);
       setTimeout(() => {
@@ -117,6 +133,8 @@ export default function EditProfilePage() {
       </AppShell>
     );
   }
+
+  const showingAvatar = avatarPreview || getImageUrl(existingAvatar);
 
   return (
     <AppShell>
@@ -143,6 +161,24 @@ export default function EditProfilePage() {
               Profile updated successfully.
             </div>
           )}
+
+          <div>
+            <label className="text-xs font-medium text-ink-muted mb-1.5 block">Profile picture</label>
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 rounded-full overflow-hidden bg-bg-hover border border-border flex items-center justify-center shrink-0">
+                {showingAvatar ? (
+                  <img src={showingAvatar} alt="Profile preview" className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-ink-faint text-xs">No photo</span>
+                )}
+              </div>
+              <label className="flex items-center gap-2 cursor-pointer text-sm font-medium text-accent-violet hover:text-accent-violet-dim border border-border hover:border-accent-violet/50 rounded-lg px-3.5 py-2 transition-colors">
+                <ImagePlus size={15} />
+                Choose photo
+                <input type="file" accept="image/*" onChange={handleAvatarChange} className="hidden" />
+              </label>
+            </div>
+          </div>
 
           <Input
             label="Name"

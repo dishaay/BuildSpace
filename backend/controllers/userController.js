@@ -65,7 +65,10 @@ const updateProfile = async (req, res) => {
         if (lookingForTeam !== undefined)
             user.lookingForTeam = lookingForTeam;
         if (skills !== undefined) user.skills = skills;
-
+        
+if (req.file) {
+      user.avatar = req.file.path;
+    }
         await user.save();
 
         return res.status(200).json({

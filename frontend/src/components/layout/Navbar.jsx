@@ -2,8 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { Search, Bell, MessageSquare, Menu, X, Terminal, LogOut, User as UserIcon } from "lucide-react";
 import Avatar from "../common/Avatar";
-import { currentUser } from "../../data/dummyData";
-
+import { getProfile } from "../../services/userService";
 const navItems = [
   { to: "/feed", label: "Feed" },
   { to: "/communities", label: "Communities" },
@@ -16,7 +15,7 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef(null);
   const navigate = useNavigate();
-
+  const [user, setUser] = useState(null);
   useEffect(() => {
     function handleClickOutside(e) {
       if (menuRef.current && !menuRef.current.contains(e.target)) {
@@ -26,6 +25,19 @@ export default function Navbar() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    async function fetchUser() {
+        try {
+            const res = await getProfile();
+            setUser(res.data.user);
+        } catch (err) {
+            console.log(err);
+        }
+    }
+
+    fetchUser();
+}, []);
 
   function handleLogout() {
     // JWT-based auth — logging out just means forgetting the token
@@ -88,7 +100,7 @@ export default function Navbar() {
           </button>
           <div className="relative ml-1" ref={menuRef}>
             <button onClick={() => setMenuOpen((v) => !v)} className="block">
-              <Avatar user={currentUser} size="sm" />
+<Avatar user={user} size="sm" />
             </button>
 
             {menuOpen && (

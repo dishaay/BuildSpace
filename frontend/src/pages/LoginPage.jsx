@@ -73,7 +73,12 @@ localStorage.setItem("user", JSON.stringify(response.data.user));
             <div>
               <div className="flex items-center justify-between mb-1.5">
                 <label className="text-xs font-medium text-ink-muted">Password</label>
-                <span className="text-xs text-accent-violet hover:underline cursor-pointer">Forgot?</span>
+                <Link
+    to="/forgot-password"
+    className="text-xs text-accent-violet hover:underline"
+>
+    Forgot?
+</Link>
               </div>
               <div className="relative">
                 <Lock size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-faint" />

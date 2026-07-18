@@ -1,6 +1,8 @@
 const mongoose= require('mongoose');
 
 const userSchema = new mongoose.Schema({
+  resetOTP: String,
+resetOTPExpires: Date,
   username: {
     type: String,
     required: true,
@@ -87,6 +89,7 @@ linkedin: {
 }, {
   timestamps: true,
 },
+
 );
 
 module.exports = mongoose.model("User", userSchema);

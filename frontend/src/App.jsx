@@ -16,6 +16,8 @@ import HackathonDetailsPage from "./pages/hackathons/HackathonDetailsPage";
 import MyHackathonsPage from "./pages/hackathons/MyHackathonsPage";
 import JoinRequestsPage from "./pages/hackathons/JoinRequestsPage";
 import ProjectDetails from "./pages/projects/ProjectDetails";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import SearchPage from "./pages/SearchPage";
 import PostDetailsPage from "./pages/PostDetailsPage";
 export default function App() {
@@ -40,6 +42,15 @@ export default function App() {
         <Route path="/projects/edit/:id" element={<EditProject />} />
         <Route path="/hackathons/new" element={<CreateHackathonPage />} />
         <Route path="/hackathons/:id" element={<HackathonDetailsPage />} />
+        <Route
+    path="/forgot-password"
+    element={<ForgotPassword />}
+/>
+
+<Route
+    path="/reset-password"
+    element={<ResetPassword />}
+/>
       <Route
     path="/search"
     element={<SearchPage />}

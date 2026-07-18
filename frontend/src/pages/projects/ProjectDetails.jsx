@@ -257,6 +257,9 @@ const {
   forks,
 } = project;
 
+console.log("THUMBNAIL:", thumbnail);
+console.log("SCREENSHOTS:", screenshots);
+
 const isOwner =
     currentUserId &&
     createdBy &&

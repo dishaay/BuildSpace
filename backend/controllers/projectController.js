@@ -17,6 +17,16 @@ const {
     status,
 } = req.body;
 
+const parsedTechStack =
+    typeof techStack === "string"
+        ? JSON.parse(techStack)
+        : techStack;
+
+const parsedTags =
+    typeof tags === "string"
+        ? JSON.parse(tags)
+        : tags;
+
     if (!title || !description) {
     return res.status(400).json({
         message: "Title and Description are required"
@@ -39,16 +49,17 @@ const screenshots = req.files?.screenshots?.length
     journey,
     challenges,
     futurePlans,
-    techStack,
+    techStack: parsedTechStack,
     githubLink,
     liveLink,
-    tags,
+tags: parsedTags,
     status,
     thumbnail,
     screenshots,
     createdBy:req.user._id
 });
-
+console.log("BODY:", req.body);
+console.log("FILES:", req.files);
       await project.save();
 
 

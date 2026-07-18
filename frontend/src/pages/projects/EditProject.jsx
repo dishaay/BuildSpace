@@ -22,6 +22,7 @@ function Field({ label, children, hint }) {
   );
 }
 
+
 const emptyForm = {
   title: "",
   description: "",
@@ -39,7 +40,8 @@ const emptyForm = {
 export default function EditProject() {
   const { id } = useParams();
   const navigate = useNavigate();
-
+const [screenshots, setScreenshots] = useState([]);
+const [screenshotPreviews, setScreenshotPreviews] = useState([]);
   const [form, setForm] = useState(emptyForm);
   const [thumbnail, setThumbnail] = useState(null);
   const [thumbnailPreview, setThumbnailPreview] = useState("");
@@ -49,6 +51,17 @@ export default function EditProject() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
 
+  
+function handleScreenshotsChange(e) {
+    const files = Array.from(e.target.files);
+
+setScreenshots((prev) => [...prev, ...files]);
+
+setScreenshotPreviews((prev) => [
+    ...prev,
+    ...files.map((f) => URL.createObjectURL(f)),
+]);
+}
   useEffect(() => {
     let ignore = false;
 
@@ -127,20 +140,46 @@ export default function EditProject() {
     try {
       const token = localStorage.getItem("token");
       console.log(form);
-      const payload = {
-  title: form.title,
-  description: form.description,
-  inspiration: form.inspiration,
-  journey: form.journey,
-  challenges: form.challenges,
-  futurePlans: form.futurePlans,
-  techStack: toList(form.techStack),
-  githubLink: form.githubLink,
-  liveLink: form.liveLink,
-  tags: toList(form.tags),
-  status: form.status,
-  screenshots: toList(form.screenshots),
-};
+const payload = new FormData();
+
+payload.append("title", form.title);
+payload.append("description", form.description);
+payload.append("inspiration", form.inspiration);
+payload.append("journey", form.journey);
+payload.append("challenges", form.challenges);
+payload.append("futurePlans", form.futurePlans);
+
+payload.append(
+    "techStack",
+    JSON.stringify(toList(form.techStack))
+);
+
+payload.append(
+    "tags",
+    JSON.stringify(toList(form.tags))
+);
+
+payload.append("githubLink", form.githubLink);
+payload.append("liveLink", form.liveLink);
+payload.append("status", form.status);
+
+if (thumbnail) {
+    payload.append("thumbnail", thumbnail);
+}
+
+screenshots.forEach((file) => {
+    payload.append("screenshots", file);
+});
+
+await axios.put(
+    `/api/projects/${id}`,
+    payload,
+    {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    }
+);
       console.log(payload);
 console.log(id);
 console.log(token)
@@ -372,6 +411,25 @@ console.log(token)
               </label>
             )}
           </Field>
+
+          <Field label="Screenshots">
+    <input
+        type="file"
+        multiple
+        accept="image/*"
+        onChange={handleScreenshotsChange}
+    />
+
+    <div className="grid grid-cols-3 gap-2 mt-3">
+        {screenshotPreviews.map((img, i) => (
+            <img
+                key={i}
+                src={img}
+                className="h-24 w-full object-cover rounded"
+            />
+        ))}
+    </div>
+</Field>
 
           <div className="flex items-center gap-3 pt-2 border-t border-border-soft">
             <Button type="submit" disabled={submitting} icon={submitting ? Loader2 : undefined}>

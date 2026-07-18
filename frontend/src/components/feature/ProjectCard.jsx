@@ -101,6 +101,14 @@ export default function ProjectCard({ project, currentUserId, onDelete }) {
         to={`/projects/${project._id}`}
         className="block"
       >
+
+        {project.thumbnail && (
+  <img
+    src={project.thumbnail}
+    alt={project.title}
+    className="w-full h-48 object-cover rounded-lg mb-4"
+  />
+)}
         {/* Title */}
         <div>
           <h3 className="font-display text-lg font-semibold">

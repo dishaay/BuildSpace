@@ -37,9 +37,9 @@ export default function CreateProject() {
   liveLink: "",
   tags: "",
   status: "In Progress",
-  screenshots: "",
 });
   const [thumbnail, setThumbnail] = useState(null);
+  const [screenshots, setScreenshots] = useState([]);
   const [thumbnailPreview, setThumbnailPreview] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -67,41 +67,55 @@ export default function CreateProject() {
       .filter(Boolean);
   }
 
-  async function handleSubmit(e) {
+async function handleSubmit(e) {
     e.preventDefault();
     setError("");
     setSubmitting(true);
 
     try {
-      const payload = {
-        title: form.title,
-        description: form.description,
-        techStack: toList(form.techStack),
-        githubLink: form.githubLink,
-        liveLink: form.liveLink,
-        tags: toList(form.tags),
-        status: form.status,
-        inspiration: form.inspiration,
-        journey: form.journey,
-        challenges: form.challenges,
-        futurePlans: form.futurePlans,
-         screenshots: toList(form.screenshots),
-        // Note: thumbnail upload is UI-only here — wire this to real file
-        // upload (e.g. multipart/form-data or a signed URL) when the
-        // backend supports it.
-      };
+        const payload = new FormData();
 
-await createProject(payload);
+        payload.append("title", form.title);
+        payload.append("description", form.description);
+        payload.append("inspiration", form.inspiration);
+        payload.append("journey", form.journey);
+        payload.append("challenges", form.challenges);
+        payload.append("futurePlans", form.futurePlans);
 
-      navigate("/projects");
+        payload.append(
+            "techStack",
+            JSON.stringify(toList(form.techStack))
+        );
+
+        payload.append(
+            "tags",
+            JSON.stringify(toList(form.tags))
+        );
+
+        payload.append("githubLink", form.githubLink);
+        payload.append("liveLink", form.liveLink);
+        payload.append("status", form.status);
+
+        if (thumbnail) {
+            payload.append("thumbnail", thumbnail);
+        }
+
+        screenshots.forEach((file) => {
+            payload.append("screenshots", file);
+        });
+
+        await createProject(payload);
+
+        navigate("/projects");
     } catch (err) {
-      setError(
-        err.response?.data?.message || "Something went wrong while submitting your project."
-      );
+        setError(
+            err.response?.data?.message ||
+            "Something went wrong while submitting your project."
+        );
     } finally {
-      setSubmitting(false);
+        setSubmitting(false);
     }
-  }
+}
 
   return (
     <AppShell>
@@ -187,18 +201,7 @@ await createProject(payload);
   />
 </Field>
 
-<Field
-  label="Project Screenshots"
-  hint="Paste image URLs separated by commas"
->
-  <textarea
-    rows={4}
-    value={form.screenshots}
-    onChange={(e) => updateField("screenshots", e.target.value)}
-    placeholder={`https://image1.png,\nhttps://image2.png`}
-    className={`${inputClass} resize-none`}
-  />
-</Field>
+
           <Field label="Tech stack" hint="Comma separated, e.g. React, Node.js, MongoDB">
             <input
               type="text"
@@ -274,14 +277,17 @@ await createProject(payload);
               ))}
             </select>
           </Field>
-              <Field label="Screenshots">
-  <textarea
-    rows={4}
-    value={form.screenshots}
-    onChange={(e) => updateField("screenshots", e.target.value)}
-    placeholder="Paste image URLs separated by commas"
-    className={`${inputClass} resize-none`}
-  />
+<Field label="Screenshots">
+    <input
+        type="file"
+        multiple
+        accept="image/*"
+        onChange={(e) =>
+            setScreenshots(
+                Array.from(e.target.files)
+            )
+        }
+    />
 </Field>
           <Field label="Thumbnail">
             {thumbnailPreview ? (

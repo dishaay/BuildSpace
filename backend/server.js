@@ -4,10 +4,7 @@ const cors = require("cors");
 const app = express();
 app.use("/uploads", express.static("uploads"));
 app.use(cors({
-  origin: [
-    "http://localhost:5173",
-    "https://build-space-dbdqe78sx-dishaays-projects.vercel.app/login"
-  ],
+  origin: true,
   credentials: true
 }));
 app.use(express.json());

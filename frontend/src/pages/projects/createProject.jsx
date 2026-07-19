@@ -82,15 +82,13 @@ async function handleSubmit(e) {
         payload.append("challenges", form.challenges);
         payload.append("futurePlans", form.futurePlans);
 
-        payload.append(
-            "techStack",
-            JSON.stringify(toList(form.techStack))
-        );
+       toList(form.tags).forEach((tag) => {
+    payload.append("tags", tag);
+});
 
-        payload.append(
-            "tags",
-            JSON.stringify(toList(form.tags))
-        );
+toList(form.techStack).forEach((tech) => {
+    payload.append("techStack", tech);
+});
 
         payload.append("githubLink", form.githubLink);
         payload.append("liveLink", form.liveLink);

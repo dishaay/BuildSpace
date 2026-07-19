@@ -15,7 +15,6 @@ const statusStyles = {
   Full: "bg-accent-amber/15 text-accent-amber border-accent-amber/30",
   Closed: "bg-accent-coral/15 text-accent-coral border-accent-coral/30",
 };
-
 function getId(value) {
   if (!value) return null;
   return typeof value === "string" ? value : value._id || value.id;
@@ -42,7 +41,7 @@ function SectionHeader({ title, viewAllHref }) {
   );
 }
 
-function PostComposer({ onPosted }) {
+function PostComposer({ onPosted , currentUser}) {
   const [text, setText] = useState("");
   const [posting, setPosting] = useState(false);
   const [error, setError] = useState("");
@@ -66,27 +65,42 @@ function PostComposer({ onPosted }) {
 
   return (
     <Card padding="md" className="mb-6">
-      <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-        {error && (
-          <div className="bg-accent-coral/10 border border-accent-coral/30 text-accent-coral text-sm rounded-lg px-3.5 py-2.5">
-            {error}
-          </div>
-        )}
-        <textarea
-          rows={3}
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          placeholder="Share what you're building, learning, or stuck on..."
-          disabled={posting}
-          className="w-full bg-bg-surface border border-border rounded-lg px-3.5 py-2.5 text-sm text-ink placeholder:text-ink-faint focus:border-accent-violet/50 outline-none transition-colors resize-none disabled:opacity-50"
+    <form
+        onSubmit={handleSubmit}
+        className="flex items-start gap-3"
+    >
+        <Avatar
+            user={currentUser}
+            size="sm"
         />
-        <Button type="submit" size="sm" disabled={posting || !text.trim()} className="self-end">
-          {posting ? "Posting..." : "Post"}
-        </Button>
-      </form>
-    </Card>
-  );
-}
+
+        <div className="flex-1 flex flex-col gap-3">
+            <textarea
+                rows={3}
+                value={text}
+                onChange={(e) =>
+                    setText(e.target.value)
+                }
+                placeholder="Share what you're building..."
+                disabled={posting}
+                className="w-full bg-bg-surface border border-border rounded-lg px-3.5 py-2.5"
+            />
+
+            <Button
+                type="submit"
+                size="sm"
+                disabled={
+                    posting || !text.trim()
+                }
+                className="self-end"
+            >
+                {posting ? "Posting..." : "Post"}
+            </Button>
+        </div>
+    </form>
+</Card>
+
+              )}
 
 function PostItem({ post, currentUserId, onDeleted }) {
   const [liked, setLiked] = useState((post.likes || []).some((id) => getId(id) === currentUserId));
@@ -131,12 +145,14 @@ function PostItem({ post, currentUserId, onDeleted }) {
   return (
     <Card padding="md" className="flex gap-3">
       <Avatar
-        user={{
-          avatar: (post.author?.name || post.author?.username || "?").slice(0, 2).toUpperCase(),
-          avatarColor: "bg-accent-violet",
-        }}
-        size="sm"
-      />
+    user={{
+        avatar: post.author?.avatar,
+        username: post.author?.username,
+        name: post.author?.name,
+        avatarColor: "bg-accent-violet",
+    }}
+    size="sm"
+/>
       <div className="min-w-0 flex-1">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 flex-wrap">
@@ -171,7 +187,7 @@ function PostItem({ post, currentUserId, onDeleted }) {
 
 export default function FeedPage() {
   const [currentUserId, setCurrentUserId] = useState(null);
-
+  const [currentUser, setCurrentUser] = useState(null);
   const [posts, setPosts] = useState([]);
   const [postsLoading, setPostsLoading] = useState(true);
   const [postsError, setPostsError] = useState("");
@@ -195,10 +211,17 @@ export default function FeedPage() {
 
         if (ignore) return;
 
-        if (profileRes) {
-          const profile = profileRes.data.user;
-          setCurrentUserId(getId(profile?._id || profile?.id));
-        }
+ if (profileRes) {
+    const profile = profileRes.data.user;
+
+    console.log(profile);
+
+    setCurrentUser(profile);
+
+    setCurrentUserId(
+        getId(profile?._id || profile?.id)
+    );
+}
 
         setPosts(postsRes.data.posts || []);
 
@@ -245,8 +268,13 @@ export default function FeedPage() {
             <p className="text-ink-muted text-sm">What's new across the community.</p>
           </div>
 
-          <PostComposer onPosted={handlePosted} />
+{console.log("CURRENT USER:", currentUser)}
 
+<PostComposer
+    onPosted={handlePosted}
+    currentUser={currentUser}
+    
+/>
           {postsLoading && (
             <div className="flex items-center justify-center py-16">
               <div className="flex items-center gap-2.5 text-ink-muted text-sm">

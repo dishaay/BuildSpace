@@ -7,7 +7,7 @@ import Card from "../../components/common/Card";
 import Input from "../../components/common/Input";
 import Button from "../../components/common/Button";
 import Tag from "../../components/common/Tag";
-
+import { deleteHackathon } from "../../services/hackathonService";
 const modeOptions = ["Online", "Offline", "Hybrid"];
 const statusOptions = ["Open", "Full", "Closed"];
 
@@ -93,7 +93,20 @@ export default function EditHackathonPage() {
   function updateField(key, value) {
     setForm((prev) => ({ ...prev, [key]: value }));
   }
+async function handleDelete() {
+    const confirmed = window.confirm(
+        "Are you sure you want to delete this hackathon?"
+    );
 
+    if (!confirmed) return;
+
+    try {
+        await deleteHackathon(id);
+        navigate("/hackathons");
+    } catch (err) {
+        alert("Failed to delete hackathon.");
+    }
+}
   async function handleSubmit(e) {
     e.preventDefault();
     setSubmitError("");
@@ -293,6 +306,14 @@ export default function EditHackathonPage() {
                 Cancel
               </Button>
             </div>
+
+            <button
+    type="button"
+    onClick={handleDelete}
+    className="px-4 py-2 rounded-lg border border-red-500 text-red-500"
+>
+    Delete Hackathon
+</button>
           </form>
         </Card>
       </div>

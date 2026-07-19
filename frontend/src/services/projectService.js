@@ -20,3 +20,4 @@ export const toggleLike = (id) =>
 
 export const toggleBookmark = (projectId) =>
     api.post(`/projects/${projectId}/bookmark`);
+

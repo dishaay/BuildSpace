@@ -545,13 +545,15 @@ const isOwner =
   <div className="flex flex-col gap-4">
     {comments.map((c) => (
       <div key={c._id || c.id} className="flex gap-3">
-        <Avatar
-          user={{
-            avatar: (c.user?.name || c.user?.username || "?").slice(0, 2).toUpperCase(),
-            avatarColor: "bg-accent-violet",
-          }}
-          size="sm"
-        />
+       <Avatar
+    user={{
+        avatar: post.author?.avatar,
+        username: post.author?.username,
+        name: post.author?.name,
+        avatarColor: "bg-accent-violet",
+    }}
+    size="sm"
+/>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 flex-wrap">
             <p className="text-sm font-medium text-ink">

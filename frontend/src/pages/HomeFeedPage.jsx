@@ -247,13 +247,15 @@ function FeedPostCard({ post, currentUserId, onDeleted }) {
   return (
     <article id={`post-${post._id}`} className="bg-bg-surface border border-border rounded-xl p-4 hover:border-ink-faint/50 transition-colors">
       <div className="flex gap-3">
-        <Avatar
-          user={{
-            avatar: (post.author?.name || post.author?.username || "?").slice(0, 2).toUpperCase(),
-            avatarColor: "bg-accent-violet",
-          }}
-          size="sm"
-        />
+      <Avatar
+    user={{
+        avatar: post.author?.avatar,
+        username: post.author?.username,
+        name: post.author?.name,
+        avatarColor: "bg-accent-violet",
+    }}
+    size="sm"
+/>
         <div className="min-w-0 flex-1">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 flex-wrap text-xs text-ink-muted">
@@ -341,7 +343,7 @@ function FeedPostCard({ post, currentUserId, onDeleted }) {
 export default function HomeFeedPage() {
   const [sort, setSort] = useState("top");
   const [currentUserId, setCurrentUserId] = useState(null);
-
+  const [currentUser, setCurrentUser] = useState(null);
   const [composerText, setComposerText] = useState("");
   const [composerImages, setComposerImages] = useState([]); // File objects
   const [composerPreviews, setComposerPreviews] = useState([]); // object URLs
@@ -371,9 +373,15 @@ export default function HomeFeedPage() {
         if (ignore) return;
 
         if (profileRes) {
-          const profile = profileRes.data.user;
-          setCurrentUserId(getId(profile?._id || profile?.id));
-        }
+    const profile = profileRes.data.user;
+
+    setCurrentUser(profile);
+    setCurrentUserId(
+        getId(profile?._id || profile?.id)
+    );
+
+    console.log(profile.avatar);
+}
 
         setPosts(postsRes.data.posts || []);
       } catch (err) {
@@ -480,7 +488,10 @@ export default function HomeFeedPage() {
             )}
 
             <div className="flex items-center gap-3">
-              <Avatar user={{ avatar: "ME", avatarColor: "bg-accent-violet" }} size="sm" />
+            <Avatar
+    user={currentUser}
+    size="sm"
+/>
               <input
                 type="text"
                 value={composerText}

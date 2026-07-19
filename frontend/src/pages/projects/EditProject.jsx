@@ -6,7 +6,7 @@ import AppShell from "../../components/layout/AppShell";
 import Button from "../../components/common/Button";
 import Tag from "../../components/common/Tag";
 import GithubMark from "../../components/common/GithubMark";
-
+import { deleteProject } from "../../services/projectService";
 const statusOptions = ["In Progress", "Completed"];
 
 const inputClass =
@@ -132,6 +132,20 @@ setScreenshotPreviews((prev) => [
       .filter(Boolean);
   }
 
+  async function handleDelete() {
+  const confirmed = window.confirm(
+    "Are you sure you want to delete this project?"
+  );
+
+  if (!confirmed) return;
+
+  try {
+    await deleteProject(id);
+    navigate("/projects");
+  } catch (err) {
+    alert("Failed to delete project.");
+  }
+}
   async function handleSubmit(e) {
     e.preventDefault();
     setSubmitError("");
@@ -431,14 +445,33 @@ console.log(token)
     </div>
 </Field>
 
-          <div className="flex items-center gap-3 pt-2 border-t border-border-soft">
-            <Button type="submit" disabled={submitting} icon={submitting ? Loader2 : undefined}>
-              {submitting ? "Saving..." : "Save changes"}
-            </Button>
-            <Button type="button" variant="secondary" onClick={() => navigate(-1)} disabled={submitting}>
-              Cancel
-            </Button>
-          </div>
+<div className="flex items-center gap-3 pt-2">
+    <Button
+      type="submit"
+      disabled={submitting}
+      icon={submitting ? Loader2 : undefined}
+    >
+      {submitting ? "Saving..." : "Save Changes"}
+    </Button>
+
+    <Button
+      type="button"
+      variant="secondary"
+      onClick={() => navigate(-1)}
+    >
+      Cancel
+    </Button>
+
+    <button
+      type="button"
+      onClick={handleDelete}
+      className="px-4 py-2 rounded-lg border border-red-500 text-red-500"
+    >
+      Delete Project
+    </button>
+</div>
+
+          
         </form>
       </div>
     </AppShell>

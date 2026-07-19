@@ -20,10 +20,14 @@ const hackathonSchema = new mongoose.Schema(
 
     registrationDeadline: {
       type: Date,
+            required: true,
+
     },
 
     startDate: {
       type: Date,
+            required: true,
+
     },
 
     endDate: {

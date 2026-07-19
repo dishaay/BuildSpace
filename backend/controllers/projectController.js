@@ -17,22 +17,17 @@ const {
     status,
 } = req.body;
 
-const parsedTechStack =
-    typeof techStack === "string"
-        ? JSON.parse(techStack)
-        : techStack;
+const parsedTags = Array.isArray(tags)
+  ? tags
+  : tags
+  ? [tags]
+  : [];
 
-const parsedTags =
-    typeof tags === "string"
-        ? JSON.parse(tags)
-        : tags;
-
-    if (!title || !description) {
-    return res.status(400).json({
-        message: "Title and Description are required"
-    });
-}
-
+const parsedTechStack = Array.isArray(techStack)
+  ? techStack
+  : techStack
+  ? [techStack]
+  : [];
 // req.files comes from upload.fields([{name:"thumbnail",maxCount:1},{name:"screenshots",maxCount:6}])
 // on the route. Each file.path is already a full Cloudinary URL.
 // Falls back to req.body.thumbnail/screenshots (plain URL strings) if no
@@ -42,6 +37,10 @@ const screenshots = req.files?.screenshots?.length
   ? req.files.screenshots.map((file) => file.path)
   : req.body.screenshots || [];
 
+  console.log("BODY:", req.body);
+console.log("techStack:", techStack);
+console.log("tags:", tags);
+console.log("Is Array?", Array.isArray(tags));
   const project = new Project({
     title,
     description,
@@ -58,8 +57,6 @@ tags: parsedTags,
     screenshots,
     createdBy:req.user._id
 });
-console.log("BODY:", req.body);
-console.log("FILES:", req.files);
       await project.save();
 
 
@@ -270,6 +267,25 @@ const updateProject = async (req, res) => {
       screenshots,
     } = req.body;
 
+    // FIX: these were being computed but never actually used below — the
+    // old code assigned the raw techStack/tags straight to the project,
+    // which could be a single string instead of a real array (e.g. if
+    // only one tech was sent, or the value arrived pre-stringified).
+    // Mongoose then silently wraps a lone string into a one-element array,
+    // which is why tags/techStack were showing up as one garbled chip
+    // instead of separate tags.
+    const parsedTags = Array.isArray(tags)
+      ? tags
+      : tags
+      ? [tags]
+      : undefined;
+
+    const parsedTechStack = Array.isArray(techStack)
+      ? techStack
+      : techStack
+      ? [techStack]
+      : undefined;
+
     // Same as createProject: prefer a freshly uploaded file over a plain
     // URL string in the body, but don't overwrite the existing value if
     // neither was sent with this request.
@@ -292,11 +308,11 @@ if (challenges !== undefined)
 if (futurePlans !== undefined)
   project.futurePlans = futurePlans;
 
-    if (techStack) project.techStack = techStack;
+    if (parsedTechStack) project.techStack = parsedTechStack;
     if (githubLink) project.githubLink = githubLink;
     if (liveLink) project.liveLink = liveLink;
     if (uploadedThumbnail || thumbnail) project.thumbnail = uploadedThumbnail || thumbnail;
-    if (tags) project.tags = tags;
+    if (parsedTags) project.tags = parsedTags;
     if (status) project.status = status;
     if (uploadedScreenshots || screenshots) project.screenshots = uploadedScreenshots || screenshots;
 

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import axios from "axios";
+import api from "../../services/api";
 import { ImagePlus, Link2, X, Loader2 } from "lucide-react";
 import AppShell from "../../components/layout/AppShell";
 import Button from "../../components/common/Button";
@@ -70,7 +70,7 @@ setScreenshotPreviews((prev) => [
       setLoadError("");
       try {
         const token = localStorage.getItem("token");
-        const res = await axios.get(`/api/projects/${id}`, {
+        const res = await api.get(`/api/projects/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         console.log(res.data);
@@ -92,6 +92,7 @@ setScreenshotPreviews((prev) => [
   status: project.status || "In Progress",
 });
         setThumbnailPreview(project.thumbnail || "");
+        setScreenshotPreviews(project.screenshots || []);
       } catch (err) {
         if (!ignore) {
           setLoadError(
@@ -185,19 +186,10 @@ screenshots.forEach((file) => {
     payload.append("screenshots", file);
 });
 
-await axios.put(
-    `/api/projects/${id}`,
-    payload,
-    {
-        headers: {
-            Authorization: `Bearer ${token}`,
-        },
-    }
-);
       console.log(payload);
 console.log(id);
 console.log(token)
-      await axios.put(`/api/projects/${id}`, payload, {
+      await api.put(`/api/projects/${id}`, payload, {
         headers: { Authorization: `Bearer ${token}` },
       });
 

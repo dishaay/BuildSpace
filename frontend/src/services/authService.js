@@ -4,7 +4,7 @@ export const register = (data) =>
     api.post("/auth/register", data);
 
 export const login = (data) =>
-    api.post("/auth/login", data);
+    api.post("/api/auth/login", data);
 
 export const forgotPassword = (email) =>
     api.post(

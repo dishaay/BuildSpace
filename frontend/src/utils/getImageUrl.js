@@ -1,5 +1,4 @@
-const BACKEND_ORIGIN = "http://localhost:5000";
-
+const BACKEND_ORIGIN = "https://buildspace-backend-w1v9.onrender.com";
 export function getImageUrl(path) {
   if (!path) return "";
 

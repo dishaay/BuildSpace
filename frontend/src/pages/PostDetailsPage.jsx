@@ -46,7 +46,7 @@ export default function PostDetailsPage() {
     }
 console.log(post);
 console.log(post.image);
-console.log(`http://localhost:5000${post.image}`);
+console.log(`${BACKEND_URL}${post.image}`);
 console.log(post.images[0]);
     return (
         <AppShell>
@@ -70,8 +70,7 @@ console.log(post.images[0]);
 
                     {post.images?.length > 0 && (
     <img
-        src={`http://localhost:5000${post.images[0]}`}
-        alt="Post"
+src={`${BACKEND_URL}${post.images[0]}`}
         className="mt-6 rounded-xl w-full max-h-[500px] object-cover border border-border"
     />
 )}

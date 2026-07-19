@@ -1,12 +1,16 @@
 require("dotenv").config();
-const express = require('express');
-const cors = require("cors");
 const app = express();
-app.use("/uploads", express.static("uploads"));
+const cors = require("cors");
+
 app.use(cors({
   origin: true,
   credentials: true
 }));
+app.options("*", cors());
+
+const express = require('express');
+app.use("/uploads", express.static("uploads"));
+
 app.use(express.json());
 
 const PORT = process.env.PORT || 3000;

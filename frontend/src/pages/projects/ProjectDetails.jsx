@@ -280,7 +280,7 @@ const isOwner =
           <div className="w-full h-56 sm:h-72 bg-bg-hover flex items-center justify-center overflow-hidden">
             {thumbnail ? (
               <img
-    src={`${BACKEND_URL}${thumbnail}`}
+    src={thumbnail}
     alt={`${title} thumbnail`}
     className="w-full h-full object-cover"
 />
@@ -419,7 +419,7 @@ const isOwner =
       {project.screenshots.map((image, index) => (
  <img
     key={index}
-    src={`${BACKEND_URL}${image}`}
+    src={image}
     alt={`Screenshot ${index + 1}`}
 />
       ))}

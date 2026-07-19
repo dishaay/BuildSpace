@@ -35,7 +35,7 @@ localStorage.setItem("user", JSON.stringify(response.data.user));
             <Terminal size={16} className="text-white" />
           </div>
           <span className="font-display font-semibold text-lg">
-            dev<span className="text-accent-violet">hub</span>
+            build<span className="text-accent-violet">Space</span>
           </span>
         </Link>
 

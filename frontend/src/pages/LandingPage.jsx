@@ -38,7 +38,7 @@ export default function LandingPage() {
             <Terminal size={16} className="text-white" />
           </div>
           <span className="font-display font-semibold text-lg">
-            Build<span className="text-accent-violet">Space</span>
+            build<span className="text-accent-violet">Space</span>
           </span>
         </div>
         <div className="flex items-center gap-2 sm:gap-3">

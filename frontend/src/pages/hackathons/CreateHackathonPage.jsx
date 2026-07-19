@@ -51,15 +51,17 @@ export default function CreateHackathonPage() {
         title: form.title,
         description: form.description,
         officialLink: form.officialLink,
-        registrationDeadline: form.registrationDeadline || undefined,
-        startDate: form.startDate || undefined,
-        endDate: form.endDate || undefined,
+        registrationDeadline: form.registrationDeadline,
+startDate: form.startDate,
+endDate: form.endDate,
         techStack: toList(form.techStack),
         mode: form.mode,
         location: form.location,
         prizePool: form.prizePool,
         maxTeamSize: Number(form.maxTeamSize),
       };
+      console.log("FORM:", form);
+console.log("PAYLOAD:", payload);
       await createHackathon(payload);
 
       navigate("/hackathons/mine");

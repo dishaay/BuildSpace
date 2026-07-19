@@ -6,7 +6,7 @@ app.use("/uploads", express.static("uploads"));
 app.use(cors({
   origin: [
     "http://localhost:5173",
-    "https://build-space-7swkuvzpb-dishaays-projects.vercel.app"
+    "https://build-space-dbdqe78sx-dishaays-projects.vercel.app/login"
   ],
   credentials: true
 }));

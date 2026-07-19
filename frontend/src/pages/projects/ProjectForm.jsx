@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import axios from "axios";
+import api from "../../services/api";
 import { ImagePlus, Link2, X, Loader2 } from "lucide-react";
 import AppShell from "../../components/layout/AppShell";
 import Button from "../../components/common/Button";
@@ -56,7 +56,7 @@ export default function EditProject() {
       setLoadError("");
       try {
         const token = localStorage.getItem("token");
-        const res = await axios.get(`/api/projects/${id}`, {
+        const res = await api.get(`/api/projects/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -139,7 +139,7 @@ export default function EditProject() {
   status: form.status,
 };
 
-      await axios.put(`/api/projects/${id}`, payload, {
+      await api.put(`/api/projects/${id}`, payload, {
         headers: { Authorization: `Bearer ${token}` },
       });
 

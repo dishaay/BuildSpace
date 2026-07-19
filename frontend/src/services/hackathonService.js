@@ -1,21 +1,21 @@
 import api from "./api";
 
 export const getHackathons=()=>
-    api.get("/hackathons");
+    api.get("/api/hackathons");
 
 export const getMyHackathons = async () => {
-    return await api.get("/hackathons/mine");
+    return await api.get("/api/hackathons/mine");
 };
 export const createHackathon=(data)=>
-    api.post("/hackathons",data);
+    api.post("/api/hackathons",data);
 
 export const updateHackathon=(id,data)=>
-    api.put(`/hackathons/${id}`,data);
+    api.put(`/api/hackathons/${id}`,data);
 
 export const deleteHackathon=(id)=>
-    api.delete(`/hackathons/${id}`);
+    api.delete(`/api/hackathons/${id}`);
 export const getHackathonById=(id)=>
-    api.get(`/hackathons/${id}`);
+    api.get(`/api/hackathons/${id}`);
 
 export const joinHackathon=(id)=>
-    api.post(`/hackathons/${id}/join`);
+    api.post(`/api/hackathons/${id}/join`);

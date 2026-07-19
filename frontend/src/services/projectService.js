@@ -1,23 +1,23 @@
 import api from "./api";
 
 export const getProjects = () =>
-    api.get("/projects");
+    api.get("/api/projects");
 
 export const getProjectById = (id) =>
-    api.get(`/projects/${id}`);
+    api.get(`/api/projects/${id}`);
 
 export const createProject = (data) =>
-    api.post("/projects", data);
+    api.post("/api/projects", data);
 
 export const updateProject = (id, data) =>
-    api.put(`/projects/${id}`, data);
+    api.put(`/api/projects/${id}`, data);
 
 export const deleteProject = (id) =>
-    api.delete(`/projects/${id}`);
+    api.delete(`/api/projects/${id}`);
 
 export const toggleLike = (id) =>
-    api.post(`/projects/${id}/like`);
+    api.post(`/api/projects/${id}/like`);
 
 export const toggleBookmark = (projectId) =>
-    api.post(`/projects/${projectId}/bookmark`);
+    api.post(`/api/projects/${projectId}/bookmark`);
 

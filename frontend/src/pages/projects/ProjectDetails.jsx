@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
-import axios from "axios";
+import api from "../../services/api";
 import GithubMark from "../../components/common/GithubMark";
 import { toggleLike } from "../../services/projectService";
 import { getComments, createComment } from "../../services/commentService";
 import { getProfile } from "../../services/userService";
 import { toggleBookmark } from "../../services/projectService"
-
+const BACKEND_URL = import.meta.env.VITE_API_URL;
 import {
   ExternalLink,
   Loader2,
@@ -73,11 +73,11 @@ export default function ProjectDetails() {
   try {
     const token = localStorage.getItem("token");
 
-    const res = await axios.get(`/api/projects/${id}`, {
-      headers: token
-        ? { Authorization: `Bearer ${token}` }
-        : {},
-    });
+   const res = await api.get(`/api/projects/${id}`, {
+  headers: token
+    ? { Authorization: `Bearer ${token}` }
+    : {},
+});
 
     
     const data =
@@ -279,7 +279,11 @@ const isOwner =
           {/* Thumbnail */}
           <div className="w-full h-56 sm:h-72 bg-bg-hover flex items-center justify-center overflow-hidden">
             {thumbnail ? (
-              <img src={thumbnail} alt={`${title} thumbnail`} className="w-full h-full object-cover" />
+              <img
+    src={`${BACKEND_URL}${thumbnail}`}
+    alt={`${title} thumbnail`}
+    className="w-full h-full object-cover"
+/>
             ) : (
               <span className="font-mono text-xs text-ink-faint">No thumbnail provided</span>
             )}
@@ -413,12 +417,11 @@ const isOwner =
 
     <div className="grid md:grid-cols-2 gap-4">
       {project.screenshots.map((image, index) => (
-        <img
-          key={index}
-          src={image}
-          alt={`Screenshot ${index + 1}`}
-          className="rounded-xl border border-border object-cover"
-        />
+ <img
+    key={index}
+    src={`${BACKEND_URL}${image}`}
+    alt={`Screenshot ${index + 1}`}
+/>
       ))}
     </div>
   </div>
@@ -547,9 +550,9 @@ const isOwner =
       <div key={c._id || c.id} className="flex gap-3">
        <Avatar
     user={{
-        avatar: post.author?.avatar,
-        username: post.author?.username,
-        name: post.author?.name,
+        avatar: c.user?.avatar,
+        username: c.user?.username,
+        name: c.user?.name,
         avatarColor: "bg-accent-violet",
     }}
     size="sm"

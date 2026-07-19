@@ -173,18 +173,39 @@ const forgotPassword = async (req, res) => {
         await user.save();
 
         await sendEmail({
-            to: email,
-            subject: "BuildSpace Password Reset",
-            html: `
-                <h1>Password Reset</h1>
+    to: email,
+    subject: "Reset Your BuildSpace Password",
+    html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; color: #333;">
+            <h1 style="color: #7C3AED;">BuildSpace</h1>
 
-                <p>Your OTP is:</p>
+            <p>Hello,</p>
 
-                <h2>${otp}</h2>
+            <p>We received a request to reset your BuildSpace account password.</p>
 
-                <p>Valid for 10 minutes.</p>
-            `,
-        });
+            <p>Please use the following One-Time Password (OTP) to continue:</p>
+
+            <div style="
+                background-color: #f4f4f5;
+                padding: 15px;
+                text-align: center;
+                border-radius: 8px;
+                margin: 20px 0;
+            ">
+                <h2 style="margin: 0; letter-spacing: 4px;">${otp}</h2>
+            </div>
+
+            <p>This OTP is valid for <strong>10 minutes</strong>.</p>
+
+            <p>If you did not request a password reset, you can safely ignore this email.</p>
+
+            <br />
+
+            <p>Happy building!</p>
+            <p><strong>— The BuildSpace Team</strong></p>
+        </div>
+    `,
+});
 
         return res.json({
             success: true,

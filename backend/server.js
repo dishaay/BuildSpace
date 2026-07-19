@@ -1,4 +1,6 @@
 require("dotenv").config();
+const express = require('express');
+
 const app = express();
 const cors = require("cors");
 
@@ -8,7 +10,6 @@ app.use(cors({
 }));
 app.options("*", cors());
 
-const express = require('express');
 app.use("/uploads", express.static("uploads"));
 
 app.use(express.json());

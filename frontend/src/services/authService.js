@@ -1,14 +1,14 @@
 import api from "./api";
 
 export const register = (data) =>
-    api.post("/auth/register", data);
+    api.post("/api/auth/register", data);
 
 export const login = (data) =>
     api.post("/api/auth/login", data);
 
 export const forgotPassword = (email) =>
     api.post(
-        "/auth/forgot-password",
+        "/api/auth/forgot-password",
         { email }
     );
 
@@ -18,7 +18,7 @@ export const resetPassword = (
     newPassword
 ) =>
     api.post(
-        "/auth/reset-password",
+        "/api/auth/reset-password",
         {
             email,
             otp,
